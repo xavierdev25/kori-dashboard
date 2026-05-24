@@ -17,14 +17,10 @@ describe("downloadNoteImage", () => {
 
     await downloadNoteImage(element, "kori-note-id.png");
 
-    expect(toPng).toHaveBeenCalledWith(
-      element,
-      expect.objectContaining({
-        backgroundColor: "#f6f7f9",
-        cacheBust: true,
-        pixelRatio: 2,
-      }),
-    );
+    expect(toPng).toHaveBeenCalledWith(element, {
+      cacheBust: true,
+      pixelRatio: 2,
+    });
     expect(click).toHaveBeenCalledOnce();
   });
 

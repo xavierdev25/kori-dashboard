@@ -160,7 +160,7 @@ export default function NoteDetailPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="flex min-w-[460px] justify-center">
-            <NotePreview note={note} ref={previewRef} />
+            <NotePreview disableRotation note={note} ref={previewRef} />
           </div>
         </div>
 

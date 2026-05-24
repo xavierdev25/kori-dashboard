@@ -1,5 +1,6 @@
 import type { AdminNote } from "@/features/notes/types/note.types";
 import { formatDate } from "@/features/notes/utils/format-date";
+import { getNoteRotationStyle } from "@/features/notes/utils/note-rotation";
 
 const noteColors = {
   blue: { background: "#b9ddf2", border: "#7ab6d6" },
@@ -8,7 +9,13 @@ const noteColors = {
   yellow: { background: "#f4df8a", border: "#d1b94f" },
 };
 
-export function TextNotePreview({ note }: { note: AdminNote }) {
+export function TextNotePreview({
+  disableRotation = false,
+  note,
+}: {
+  disableRotation?: boolean;
+  note: AdminNote;
+}) {
   const color = noteColors[note.color || "yellow"] || noteColors.yellow;
 
   return (
@@ -17,7 +24,7 @@ export function TextNotePreview({ note }: { note: AdminNote }) {
       style={{
         backgroundColor: color.background,
         borderColor: color.border,
-        transform: `rotate(${note.rotation || 0}deg)`,
+        transform: getNoteRotationStyle(note.rotation || 0, disableRotation),
       }}
     >
       <div className="flex h-full min-h-64 flex-col">

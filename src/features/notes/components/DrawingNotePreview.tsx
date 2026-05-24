@@ -1,13 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
 import type { AdminNote } from "@/features/notes/types/note.types";
 import { formatDate } from "@/features/notes/utils/format-date";
+import { getNoteRotationStyle } from "@/features/notes/utils/note-rotation";
 
-export function DrawingNotePreview({ note }: { note: AdminNote }) {
+export function DrawingNotePreview({
+  disableRotation = false,
+  note,
+}: {
+  disableRotation?: boolean;
+  note: AdminNote;
+}) {
   return (
     <article
       className="w-80 rounded-md border border-neutral-200 bg-white p-4 shadow-lg"
       style={{
-        transform: `rotate(${note.rotation || 0}deg)`,
+        transform: getNoteRotationStyle(note.rotation || 0, disableRotation),
       }}
     >
       <div className="flex aspect-square items-center justify-center overflow-hidden rounded-sm bg-neutral-100">

@@ -6,7 +6,6 @@ export async function downloadNoteImage(element: HTMLElement | null, fileName: s
   }
 
   const dataUrl = await toPng(element, {
-    backgroundColor: "#f6f7f9",
     cacheBust: true,
     pixelRatio: 2,
   });
