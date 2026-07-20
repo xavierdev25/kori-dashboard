@@ -21,6 +21,7 @@ export default function NotesPage() {
     limit: 20,
     page: 1,
     search: "",
+    status: "ALL",
     type: "ALL",
   });
   const [deleteTarget, setDeleteTarget] = useState<AdminNote | null>(null);
@@ -34,6 +35,7 @@ export default function NotesPage() {
     limit: filters.limit,
     page: filters.page,
     search: filters.search,
+    status: filters.status === "ALL" ? undefined : filters.status,
     type: filters.type === "ALL" ? undefined : filters.type,
   });
 
@@ -50,6 +52,21 @@ export default function NotesPage() {
   function goToPage(page: number) {
     setFilters((current) => ({ ...current, page }));
     setFeedback(null);
+  }
+
+  async function handleApprove(note: AdminNote) {
+    setFeedback(null);
+
+    try {
+      await notesService.approveNote(note.id);
+      setFeedback({
+        message: "Nota aprobada: ya es visible en el muro.",
+        tone: "success",
+      });
+      await refresh();
+    } catch {
+      setFeedback({ message: "No se pudo aprobar la nota.", tone: "error" });
+    }
   }
 
   async function handleDelete() {
@@ -114,6 +131,7 @@ export default function NotesPage() {
         error={error}
         loading={loading}
         notes={notes}
+        onApprove={handleApprove}
         onDelete={setDeleteTarget}
         onFeedback={(message, tone) => setFeedback({ message, tone })}
         onRefresh={refresh}

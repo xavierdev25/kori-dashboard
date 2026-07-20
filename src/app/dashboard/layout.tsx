@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, LogOut, StickyNote } from "lucide-react";
+import { BarChart3, LogOut, Mail, Settings, StickyNote } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -13,6 +13,8 @@ import { cn } from "@/shared/utils/cn";
 const navItems = [
   { href: "/dashboard", icon: BarChart3, label: "Resumen" },
   { href: "/dashboard/notes", icon: StickyNote, label: "Notas" },
+  { href: "/dashboard/subscribers", icon: Mail, label: "Correos" },
+  { href: "/dashboard/settings", icon: Settings, label: "Ajustes" },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

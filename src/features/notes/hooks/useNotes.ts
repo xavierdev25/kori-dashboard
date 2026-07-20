@@ -14,7 +14,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useNotes(query: NotesQuery) {
-  const { limit, page, search, type } = query;
+  const { limit, page, search, status, type } = query;
   const [notes, setNotes] = useState<AdminNote[]>([]);
   const [meta, setMeta] = useState<PaginatedNotesResponse["meta"] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,13 @@ export function useNotes(query: NotesQuery) {
     setError(null);
 
     try {
-      const response = await notesService.getNotes({ limit, page, search, type });
+      const response = await notesService.getNotes({
+        limit,
+        page,
+        search,
+        status,
+        type,
+      });
       setNotes(response.data);
       setMeta(response.meta);
     } catch (requestError) {
@@ -34,7 +40,7 @@ export function useNotes(query: NotesQuery) {
     } finally {
       setLoading(false);
     }
-  }, [limit, page, search, type]);
+  }, [limit, page, search, status, type]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

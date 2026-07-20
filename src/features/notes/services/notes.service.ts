@@ -21,6 +21,10 @@ function buildNotesQuery(query: NotesQuery) {
     params.set("type", query.type);
   }
 
+  if (query.status) {
+    params.set("status", query.status);
+  }
+
   if (query.search?.trim()) {
     params.set("search", query.search.trim());
   }
@@ -31,6 +35,12 @@ function buildNotesQuery(query: NotesQuery) {
 }
 
 export const notesService = {
+  approveNote(id: string) {
+    return apiRequest<AdminNote>(`/admin/notes/${id}/approve`, {
+      method: "PATCH",
+    });
+  },
+
   deleteNote(id: string) {
     return apiRequest<{ deleted: boolean; id: string }>(`/admin/notes/${id}`, {
       method: "DELETE",

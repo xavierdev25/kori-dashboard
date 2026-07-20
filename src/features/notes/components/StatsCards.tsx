@@ -1,4 +1,4 @@
-import { FileText, Images, StickyNote } from "lucide-react";
+import { Clock, FileText, Images, StickyNote } from "lucide-react";
 import type { NotesStats } from "@/features/notes/types/note.types";
 import { Card } from "@/shared/components/Card";
 
@@ -18,11 +18,16 @@ const statItems = [
     key: "totalDrawing",
     label: "Notas de dibujo",
   },
+  {
+    icon: Clock,
+    key: "totalPending",
+    label: "Pendientes de revision",
+  },
 ] as const;
 
 export function StatsCards({ stats }: { stats: NotesStats }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {statItems.map((item) => {
         const Icon = item.icon;
 

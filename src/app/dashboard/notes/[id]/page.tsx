@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Download, RefreshCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Download, RefreshCcw, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotePreview } from "@/features/notes/components/NotePreview";
@@ -28,6 +28,7 @@ export default function NoteDetailPage() {
   const previewRef = useRef<HTMLDivElement>(null);
   const { error, loading, note, refresh } = useNote(id);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -50,6 +51,28 @@ export default function NoteDetailPage() {
       setFeedback({ message: "No se pudo descargar la nota.", tone: "error" });
     } finally {
       setIsDownloading(false);
+    }
+  }
+
+  async function handleApprove() {
+    if (!note) {
+      return;
+    }
+
+    setIsApproving(true);
+    setFeedback(null);
+
+    try {
+      await notesService.approveNote(note.id);
+      setFeedback({
+        message: "Nota aprobada: ya es visible en el muro.",
+        tone: "success",
+      });
+      await refresh();
+    } catch {
+      setFeedback({ message: "No se pudo aprobar la nota.", tone: "error" });
+    } finally {
+      setIsApproving(false);
     }
   }
 
@@ -126,6 +149,15 @@ export default function NoteDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {note.status === "PENDING" ? (
+            <Button
+              isLoading={isApproving}
+              leftIcon={<Check aria-hidden className="h-4 w-4" />}
+              onClick={handleApprove}
+            >
+              Aprobar
+            </Button>
+          ) : null}
           <Button
             isLoading={isDownloading}
             leftIcon={<Download aria-hidden className="h-4 w-4" />}
@@ -167,11 +199,18 @@ export default function NoteDetailPage() {
         <Card className="h-fit p-5">
           <div className="mb-5 flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-neutral-950">Metadata</h3>
-            {note.type === "DRAWING" ? (
-              <Badge tone="blue">Dibujo</Badge>
-            ) : (
-              <Badge tone="green">Texto</Badge>
-            )}
+            <div className="flex flex-wrap gap-1.5">
+              {note.type === "DRAWING" ? (
+                <Badge tone="blue">Dibujo</Badge>
+              ) : (
+                <Badge tone="green">Texto</Badge>
+              )}
+              {note.status === "PENDING" ? (
+                <Badge tone="pink">Pendiente</Badge>
+              ) : (
+                <Badge tone="neutral">Aprobada</Badge>
+              )}
+            </div>
           </div>
 
           <dl className="grid gap-4 text-sm">
@@ -182,6 +221,10 @@ export default function NoteDetailPage() {
             <div>
               <dt className="font-medium text-neutral-500">Tipo</dt>
               <dd className="mt-1 text-neutral-950">{note.type}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-neutral-500">Estado</dt>
+              <dd className="mt-1 text-neutral-950">{note.status}</dd>
             </div>
             <div>
               <dt className="font-medium text-neutral-500">Creada</dt>
