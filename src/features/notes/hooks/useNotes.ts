@@ -2,16 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { notesService } from "@/features/notes/services/notes.service";
+import { getErrorText } from "@/shared/lib/error-message";
 import type {
   AdminNote,
   NotesQuery,
   NotesStats,
   PaginatedNotesResponse,
 } from "@/features/notes/types/note.types";
-
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
-}
 
 export function useNotes(query: NotesQuery) {
   const { limit, page, search, status, type } = query;
@@ -36,7 +33,7 @@ export function useNotes(query: NotesQuery) {
       setNotes(response.data);
       setMeta(response.meta);
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "No se pudieron cargar las notas."));
+      setError(getErrorText(requestError, "No se pudieron cargar las notas."));
     } finally {
       setLoading(false);
     }
@@ -76,7 +73,7 @@ export function useNote(id: string | null) {
     try {
       setNote(await notesService.getNote(id));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "No se pudo cargar la nota."));
+      setError(getErrorText(requestError, "No se pudo cargar la nota."));
     } finally {
       setLoading(false);
     }
@@ -111,7 +108,7 @@ export function useNotesStats() {
     try {
       setStats(await notesService.getStats());
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "No se pudieron cargar las metricas."));
+      setError(getErrorText(requestError, "No se pudieron cargar las metricas."));
     } finally {
       setLoading(false);
     }

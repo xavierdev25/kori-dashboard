@@ -8,8 +8,6 @@ export interface AdminNote {
   id: string;
   imageUrl: string | null;
   message: string | null;
-  positionX: number;
-  positionY: number;
   recipientName: string;
   rotation: number;
   status: NoteStatus;

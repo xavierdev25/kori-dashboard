@@ -8,6 +8,7 @@ import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
 import { Spinner } from "@/shared/components/Spinner";
+import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
 /** ISO → valor de <input type="datetime-local"> (hora local, sin segundos). */
@@ -45,8 +46,8 @@ export default function SettingsPage() {
       const settings = await settingsService.getSettings();
       setCountdownTarget(isoToLocalInput(settings.countdownTarget));
       setAlbumUrl(settings.albumUrl ?? "");
-    } catch {
-      setError("No se pudieron cargar los ajustes.");
+    } catch (error) {
+      setError(getErrorText(error, "No se pudieron cargar los ajustes."));
     } finally {
       setLoading(false);
     }
@@ -79,10 +80,12 @@ export default function SettingsPage() {
         message: "Ajustes guardados: la landing los toma en ~1 minuto.",
         tone: "success",
       });
-    } catch {
+    } catch (error) {
       setFeedback({
-        message:
+        message: getErrorText(
+          error,
           "No se pudieron guardar. Revisa que la URL sea valida (https://...).",
+        ),
         tone: "error",
       });
     } finally {

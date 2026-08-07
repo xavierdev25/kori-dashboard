@@ -10,6 +10,7 @@ import { useNotes } from "@/features/notes/hooks/useNotes";
 import { notesService } from "@/features/notes/services/notes.service";
 import type { AdminNote, NotesFilterType } from "@/features/notes/types/note.types";
 import { Button } from "@/shared/components/Button";
+import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
 interface NotesPageFilters extends NotesFiltersValue {
@@ -64,8 +65,29 @@ export default function NotesPage() {
         tone: "success",
       });
       await refresh();
-    } catch {
-      setFeedback({ message: "No se pudo aprobar la nota.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo aprobar la nota."),
+        tone: "error",
+      });
+    }
+  }
+
+  async function handleReject(note: AdminNote) {
+    setFeedback(null);
+
+    try {
+      await notesService.rejectNote(note.id);
+      setFeedback({
+        message: "Nota quitada del muro: vuelve a quedar pendiente.",
+        tone: "success",
+      });
+      await refresh();
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo quitar la nota del muro."),
+        tone: "error",
+      });
     }
   }
 
@@ -82,8 +104,11 @@ export default function NotesPage() {
       setFeedback({ message: "Nota borrada correctamente.", tone: "success" });
       setDeleteTarget(null);
       await refresh();
-    } catch {
-      setFeedback({ message: "No se pudo borrar la nota.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo borrar la nota."),
+        tone: "error",
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -135,6 +160,7 @@ export default function NotesPage() {
         onDelete={setDeleteTarget}
         onFeedback={(message, tone) => setFeedback({ message, tone })}
         onRefresh={refresh}
+        onReject={handleReject}
       />
 
       {meta && !loading && !error ? (

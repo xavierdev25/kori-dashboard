@@ -41,6 +41,13 @@ export const notesService = {
     });
   },
 
+  /** Devuelve la nota a PENDING: la baja del muro sin borrarla. */
+  rejectNote(id: string) {
+    return apiRequest<AdminNote>(`/admin/notes/${id}/reject`, {
+      method: "PATCH",
+    });
+  },
+
   deleteNote(id: string) {
     return apiRequest<{ deleted: boolean; id: string }>(`/admin/notes/${id}`, {
       method: "DELETE",

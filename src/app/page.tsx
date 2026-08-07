@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Spinner } from "@/shared/components/Spinner";
-import { getAccessToken } from "@/shared/lib/token-storage";
+import { hasAccessToken } from "@/shared/lib/token-storage";
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace(getAccessToken() ? "/dashboard" : "/login");
+    router.replace(hasAccessToken() ? "/dashboard" : "/login");
   }, [router]);
 
   return (

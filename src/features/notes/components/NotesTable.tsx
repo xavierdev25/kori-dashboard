@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Eye, RefreshCcw, Trash2, Download } from "lucide-react";
+import { Check, Eye, RefreshCcw, Trash2, Download, Undo2 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { AdminNote } from "@/features/notes/types/note.types";
 import { formatDate } from "@/features/notes/utils/format-date";
@@ -75,11 +75,13 @@ function NoteActions({
   onApprove,
   onDelete,
   onFeedback,
+  onReject,
 }: {
   note: AdminNote;
   onApprove: (note: AdminNote) => void;
   onDelete: (note: AdminNote) => void;
   onFeedback?: (message: string, tone: "success" | "error") => void;
+  onReject: (note: AdminNote) => void;
 }) {
   return (
     <>
@@ -92,7 +94,16 @@ function NoteActions({
         >
           Aprobar
         </Button>
-      ) : null}
+      ) : (
+        <Button
+          leftIcon={<Undo2 aria-hidden className="h-4 w-4" />}
+          onClick={() => onReject(note)}
+          size="sm"
+          variant="secondary"
+        >
+          Quitar del muro
+        </Button>
+      )}
       <Link
         aria-label={`Ver detalle de nota ${note.id}`}
         className={buttonVariants({ size: "sm", variant: "secondary" })}
@@ -122,6 +133,7 @@ export function NotesTable({
   onDelete,
   onFeedback,
   onRefresh,
+  onReject,
 }: {
   error: string | null;
   loading: boolean;
@@ -130,6 +142,7 @@ export function NotesTable({
   onDelete: (note: AdminNote) => void;
   onFeedback?: (message: string, tone: "success" | "error") => void;
   onRefresh: () => void;
+  onReject: (note: AdminNote) => void;
 }) {
   if (loading) {
     return (
@@ -196,7 +209,13 @@ export function NotesTable({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <NoteActions note={note} onApprove={onApprove} onDelete={onDelete} onFeedback={onFeedback} />
+              <NoteActions
+                note={note}
+                onApprove={onApprove}
+                onDelete={onDelete}
+                onFeedback={onFeedback}
+                onReject={onReject}
+              />
             </div>
           </li>
         ))}
@@ -241,7 +260,13 @@ export function NotesTable({
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap justify-end gap-2">
-                    <NoteActions note={note} onApprove={onApprove} onDelete={onDelete} onFeedback={onFeedback} />
+                    <NoteActions
+                note={note}
+                onApprove={onApprove}
+                onDelete={onDelete}
+                onFeedback={onFeedback}
+                onReject={onReject}
+              />
                   </div>
                 </td>
               </tr>

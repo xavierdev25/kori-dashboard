@@ -54,20 +54,42 @@ async function readResponseBody(response: Response) {
   return response.text();
 }
 
-function getErrorMessage(payload: unknown) {
-  if (payload && typeof payload === "object" && "message" in payload) {
-    const message = (payload as { message: unknown }).message;
+function toMessage(value: unknown) {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
 
-    if (typeof message === "string") {
-      return message;
-    }
+  if (Array.isArray(value)) {
+    const parts = value.filter((item) => typeof item === "string");
 
-    if (Array.isArray(message)) {
-      return message.filter((item) => typeof item === "string").join(". ");
-    }
+    return parts.length > 0 ? parts.join(". ") : null;
   }
 
   return null;
+}
+
+/**
+ * El backend responde los errores con el envelope
+ * `{ success: false, error: { code, message, requestId, ... } }`.
+ * Se acepta tambien `{ message }` plano por si responde una capa intermedia
+ * (proxy, Vercel) que no pasa por el filtro de excepciones de Nest.
+ */
+function getErrorMessage(payload: unknown) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const { error, message } = payload as { error?: unknown; message?: unknown };
+
+  if (error && typeof error === "object") {
+    const nested = toMessage((error as { message?: unknown }).message);
+
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return toMessage(error) ?? toMessage(message);
 }
 
 export async function apiRequest<T>(

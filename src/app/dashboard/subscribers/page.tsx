@@ -13,6 +13,7 @@ import type {
 import { Button } from "@/shared/components/Button";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Spinner } from "@/shared/components/Spinner";
+import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
@@ -42,8 +43,8 @@ export default function SubscribersPage() {
       const response = await subscribersService.getSubscribers(page);
       setSubscribers(response.data);
       setMeta(response.meta);
-    } catch {
-      setError("No se pudo cargar la lista de correos.");
+    } catch (error) {
+      setError(getErrorText(error, "No se pudo cargar la lista de correos."));
     } finally {
       setLoading(false);
     }
@@ -64,8 +65,11 @@ export default function SubscribersPage() {
       await subscribersService.deleteSubscriber(subscriber.id);
       setFeedback({ message: "Correo eliminado.", tone: "success" });
       await load();
-    } catch {
-      setFeedback({ message: "No se pudo eliminar el correo.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo eliminar el correo."),
+        tone: "error",
+      });
     }
   }
 
@@ -88,8 +92,11 @@ export default function SubscribersPage() {
         message: `CSV generado con ${all.length} correos.`,
         tone: "success",
       });
-    } catch {
-      setFeedback({ message: "No se pudo exportar el CSV.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo exportar el CSV."),
+        tone: "error",
+      });
     } finally {
       setIsExporting(false);
     }

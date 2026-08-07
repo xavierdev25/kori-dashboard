@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, RefreshCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Download, RefreshCcw, Trash2, Undo2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotePreview } from "@/features/notes/components/NotePreview";
@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Spinner } from "@/shared/components/Spinner";
+import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
 function getParamId(id: string | string[] | undefined) {
@@ -29,6 +30,7 @@ export default function NoteDetailPage() {
   const { error, loading, note, refresh } = useNote(id);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -47,8 +49,11 @@ export default function NoteDetailPage() {
     try {
       await downloadNoteImage(previewRef.current, `kori-note-${note.id}.png`);
       setFeedback({ message: "Descarga generada.", tone: "success" });
-    } catch {
-      setFeedback({ message: "No se pudo descargar la nota.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo descargar la nota."),
+        tone: "error",
+      });
     } finally {
       setIsDownloading(false);
     }
@@ -69,10 +74,38 @@ export default function NoteDetailPage() {
         tone: "success",
       });
       await refresh();
-    } catch {
-      setFeedback({ message: "No se pudo aprobar la nota.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo aprobar la nota."),
+        tone: "error",
+      });
     } finally {
       setIsApproving(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!note) {
+      return;
+    }
+
+    setIsRejecting(true);
+    setFeedback(null);
+
+    try {
+      await notesService.rejectNote(note.id);
+      setFeedback({
+        message: "Nota quitada del muro: vuelve a quedar pendiente.",
+        tone: "success",
+      });
+      await refresh();
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo quitar la nota del muro."),
+        tone: "error",
+      });
+    } finally {
+      setIsRejecting(false);
     }
   }
 
@@ -87,8 +120,11 @@ export default function NoteDetailPage() {
     try {
       await notesService.deleteNote(note.id);
       router.replace("/dashboard/notes");
-    } catch {
-      setFeedback({ message: "No se pudo borrar la nota.", tone: "error" });
+    } catch (error) {
+      setFeedback({
+        message: getErrorText(error, "No se pudo borrar la nota."),
+        tone: "error",
+      });
       setIsDeleting(false);
       setDeleteOpen(false);
     }
@@ -157,7 +193,16 @@ export default function NoteDetailPage() {
             >
               Aprobar
             </Button>
-          ) : null}
+          ) : (
+            <Button
+              isLoading={isRejecting}
+              leftIcon={<Undo2 aria-hidden className="h-4 w-4" />}
+              onClick={handleReject}
+              variant="secondary"
+            >
+              Quitar del muro
+            </Button>
+          )}
           <Button
             isLoading={isDownloading}
             leftIcon={<Download aria-hidden className="h-4 w-4" />}
