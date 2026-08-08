@@ -1,11 +1,10 @@
-import { clearAccessToken, getAccessToken } from "@/shared/lib/token-storage";
-
 const DEFAULT_API_URL = "http://localhost:4000";
 
 type ApiRequestOptions = Omit<RequestInit, "body" | "headers"> & {
-  auth?: boolean;
   body?: unknown;
   headers?: HeadersInit;
+  /** Solo para /auth/refresh: evita reintentar el refresco del refresco. */
+  skipRefresh?: boolean;
 };
 
 export class ApiError extends Error {
@@ -92,37 +91,71 @@ function getErrorMessage(payload: unknown) {
   return toMessage(error) ?? toMessage(message);
 }
 
-export async function apiRequest<T>(
+/**
+ * Un unico refresco en vuelo: si tres peticiones reciben 401 a la vez, todas
+ * esperan al mismo intento en lugar de disparar tres refrescos. Eso importa
+ * porque el backend rota el refresh token en cada uso y detecta la reutilizacion
+ * de uno ya revocado como robo, cerrando todas las sesiones.
+ */
+let refreshInFlight: Promise<boolean> | null = null;
+
+function refreshSession() {
+  refreshInFlight ??= fetch(`${getApiBaseUrl()}/auth/refresh`, {
+    cache: "no-store",
+    credentials: "include",
+    method: "POST",
+  })
+    .then((response) => response.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+
+  return refreshInFlight;
+}
+
+async function sendRequest(
   path: string,
-  { auth = true, body, headers, ...init }: ApiRequestOptions = {},
+  { body, headers, ...init }: Omit<ApiRequestOptions, "skipRefresh">,
 ) {
   const requestHeaders = new Headers(headers);
   const hasBody = body !== undefined && body !== null;
   const bodyIsNative = isBodyInit(body);
 
-  if (auth) {
-    const token = getAccessToken();
-
-    if (token) {
-      requestHeaders.set("Authorization", `Bearer ${token}`);
-    }
-  }
-
+  // FormData trae su propio Content-Type con el boundary: fijarlo a mano rompe
+  // la subida de imagenes.
   if (hasBody && !bodyIsNative && !requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  return fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     cache: init.cache ?? "no-store",
+    // Sin esto el navegador ni envia ni acepta las cookies de sesion: el
+    // backend y el panel estan en dominios distintos.
+    credentials: "include",
     headers: requestHeaders,
     body: hasBody ? (bodyIsNative ? body : JSON.stringify(body)) : undefined,
   });
+}
+
+export async function apiRequest<T>(
+  path: string,
+  { skipRefresh, ...options }: ApiRequestOptions = {},
+) {
+  let response = await sendRequest(path, options);
+
+  // El token de acceso dura 15 min. Ante un 401 se intenta refrescar una vez
+  // y se repite la peticion, para que la sesion no se caiga cada cuarto de hora.
+  if (response.status === 401 && !skipRefresh) {
+    if (await refreshSession()) {
+      response = await sendRequest(path, options);
+    }
+  }
 
   const payload = await readResponseBody(response);
 
   if (response.status === 401) {
-    clearAccessToken();
     redirectToLogin();
     throw new ApiError("Sesion expirada. Vuelve a iniciar sesion.", 401);
   }

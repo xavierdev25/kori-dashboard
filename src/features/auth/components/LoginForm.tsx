@@ -1,27 +1,22 @@
 "use client";
 
 import { LogIn } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Input } from "@/shared/components/Input";
-import { hasAccessToken } from "@/shared/lib/token-storage";
+import { getErrorText } from "@/shared/lib/error-message";
 
 export function LoginForm() {
-  const router = useRouter();
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (hasAccessToken()) {
-      router.replace("/dashboard");
-    }
-  }, [router]);
+  // Ya no se comprueba la sesion aqui: el layout de /dashboard lo hace
+  // preguntandole al backend, que es el unico que puede leer la cookie.
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,9 +24,9 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      await login({ password, username });
-    } catch {
-      setError("Credenciales inválidas.");
+      await login({ email, password });
+    } catch (submitError) {
+      setError(getErrorText(submitError, "Credenciales invalidas."));
       setIsSubmitting(false);
     }
   }
@@ -43,25 +38,26 @@ export function LoginForm() {
           Kori admin
         </p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-          Iniciar sesión
+          Iniciar sesion
         </h1>
         <p className="mt-2 text-sm leading-6 text-neutral-600">
-          Acceso privado para administrar notas publicadas por la landing.
+          Acceso privado para administrar el muro y la tienda.
         </p>
       </div>
 
       <form className="grid gap-4" onSubmit={handleSubmit}>
         <Input
-          autoComplete="username"
-          label="Usuario"
-          name="username"
-          onChange={(event) => setUsername(event.target.value)}
+          autoComplete="email"
+          label="Correo"
+          name="email"
+          onChange={(event) => setEmail(event.target.value)}
           required
-          value={username}
+          type="email"
+          value={email}
         />
         <Input
           autoComplete="current-password"
-          label="Contraseña"
+          label="Contrasena"
           name="password"
           onChange={(event) => setPassword(event.target.value)}
           required
