@@ -4,6 +4,7 @@ import type {
   SaleDetail,
   SalesQuery,
   SalesStats,
+  SalesTimeseries,
 } from "@/features/sales/types/sale.types";
 
 function buildQuery(query: SalesQuery) {
@@ -50,5 +51,16 @@ export const salesService = {
 
   getStats(query: SalesQuery = {}) {
     return apiRequest<SalesStats>(`/admin/stats${buildQuery(query)}`);
+  },
+
+  /**
+   * Serie diaria para la grafica. El agregado lo hace el backend: aqui solo
+   * llegan veinte pedidos por pagina, asi que sumar en el navegador dibujaria
+   * la curva de la pagina que toque mirar y no la de la tienda.
+   */
+  getTimeseries(query: SalesQuery = {}) {
+    return apiRequest<SalesTimeseries>(
+      `/admin/stats/timeseries${buildQuery(query)}`,
+    );
   },
 };

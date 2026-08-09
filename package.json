@@ -11,6 +11,9 @@
     "bones": "boneyard-js build http://localhost:3100"
   },
   "dependencies": {
+    "@tanstack/charts": "^0.7.2",
+    "@tanstack/charts-scales": "^0.7.2",
+    "@tanstack/react-charts": "^0.7.2",
     "cuelume": "^0.2.2",
     "html-to-image": "^1.11.13",
     "next": "16.2.6",

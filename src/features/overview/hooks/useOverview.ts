@@ -10,6 +10,7 @@ import type { NotesStats } from "@/features/notes/types/note.types";
 import type { ProductSummary } from "@/features/products/types/product.types";
 import type {
   SalesStats,
+  SalesTimeseries,
   SaleSummary,
 } from "@/features/sales/types/sale.types";
 
@@ -22,6 +23,8 @@ export interface Overview {
   recentSales: SaleSummary[];
   /** null si el usuario no es ADMIN: las ventas son solo suyas. */
   sales: SalesStats | null;
+  /** Serie diaria para la grafica. null si no es ADMIN o si fallo. */
+  timeseries: SalesTimeseries | null;
 }
 
 /**
@@ -30,6 +33,17 @@ export interface Overview {
  * Las llamadas van en paralelo y las de ventas se tratan aparte: un ARTIST
  * recibe 403 en /admin/orders, y eso no debe vaciarle el resto del resumen.
  */
+/** "2026-07-26" para "hace 14 dias", en la fecha local de quien mira. */
+function ultimosDias(dias: number): string {
+  const desde = new Date(Date.now() - (dias - 1) * 24 * 60 * 60 * 1000);
+
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(desde);
+}
+
 export function useOverview() {
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,15 +55,21 @@ export function useOverview() {
     setError(null);
 
     try {
-      const [products, notes, sales, recentSales] = await Promise.all([
-        productsService.getProducts({ limit: 100 }),
-        notesService.getStats().catch(() => null),
-        salesService.getStats().catch(() => null),
-        salesService
-          .getSales({ limit: 5 })
-          .then((response) => response.data)
-          .catch(() => []),
-      ]);
+      const [products, notes, sales, recentSales, timeseries] =
+        await Promise.all([
+          productsService.getProducts({ limit: 100 }),
+          notesService.getStats().catch(() => null),
+          salesService.getStats().catch(() => null),
+          salesService
+            .getSales({ limit: 5 })
+            .then((response) => response.data)
+            .catch(() => []),
+          // Ultimos 14 dias: en una tarjeta compacta, treinta barras se
+          // convierten en un peine ilegible.
+          salesService
+            .getTimeseries({ from: ultimosDias(14) })
+            .catch(() => null),
+        ]);
 
       const published = products.data.filter((product) => product.isActive);
 
@@ -64,6 +84,7 @@ export function useOverview() {
         publishedCount: published.length,
         recentSales,
         sales,
+        timeseries,
       });
     } catch (requestError) {
       setError(getErrorText(requestError, "No se pudo cargar el resumen."));

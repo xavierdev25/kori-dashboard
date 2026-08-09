@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PageLoader } from "@/shared/components/Spinner";
+import { CUE } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductInput } from "@/features/products/types/product.types";
@@ -71,6 +72,9 @@ export default function ProductDetailPage() {
         wasActive
           ? "Producto despublicado: ya no aparece en la tienda."
           : "Producto publicado: ya está a la venta.",
+        // Publicar es el momento mas alegre del panel y se lleva el cue mas
+        // vistoso. Retirarlo es solo cambiar un interruptor.
+        wasActive ? CUE.alternar : CUE.publicado,
       );
     } catch (toggleError) {
       // El backend vuelve a validar y responde 409 nombrando lo que falta:

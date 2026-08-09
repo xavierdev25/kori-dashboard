@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Input } from "@/shared/components/Input";
+import { CUE, cue, initSound } from "@/shared/lib/sound";
 import { getErrorText } from "@/shared/lib/error-message";
 
 export function LoginForm() {
@@ -25,6 +26,10 @@ export function LoginForm() {
 
     try {
       await login({ email, password });
+      // El sistema de sonido se enciende aqui: el navegador no deja crear el
+      // contexto de audio sin un gesto real, y este submit es el primero.
+      initSound();
+      cue(CUE.entrar);
     } catch (submitError) {
       setError(getErrorText(submitError, "Credenciales invalidas."));
       setIsSubmitting(false);

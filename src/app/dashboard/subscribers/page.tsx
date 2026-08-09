@@ -14,6 +14,7 @@ import { Button } from "@/shared/components/Button";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { TableSkeleton } from "@/shared/components/Skeleton";
+import { CUE, cue } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 
@@ -79,6 +80,9 @@ export default function SubscribersPage() {
 
   async function handleExport() {
     setIsExporting(true);
+    // Reunir todos los correos puede tardar: se avisa al empezar y el chime
+    // marca el final, cuando el fichero ya esta en el disco.
+    cue(CUE.ocupado);
 
     try {
       const all = await subscribersService.getAllSubscribers();
@@ -91,7 +95,7 @@ export default function SubscribersPage() {
       link.download = `kori-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success(`CSV generado con ${all.length} correos.`);
+      toast.success(`CSV generado con ${all.length} correos.`, CUE.exportado);
     } catch (error) {
       toast.error(getErrorText(error, "No se pudo exportar el CSV."));
     } finally {

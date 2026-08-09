@@ -33,7 +33,7 @@ export function setSoundEnabled(value: boolean): void {
 
   // Un sonido al encender confirma que funciona; al apagar, silencio.
   if (value) {
-    play("ready");
+    play("toggle");
   }
 }
 
@@ -61,3 +61,49 @@ export function initSound(): void {
 export function cue(name: SoundName): void {
   play(name);
 }
+
+/**
+ * Qué significa cada sonido en el panel.
+ *
+ * cuelume trae diecisiete cues, y cada uno tiene su forma: no son diecisiete
+ * variantes del mismo clic. Repartirlos es lo que convierte el sonido en
+ * informacion — sabes que ha pasado sin mirar. Si todo sonara igual, daria
+ * lo mismo tener uno.
+ *
+ * La regla al repartirlos fue la frecuencia: lo que se oye cien veces al dia
+ * (pulsar, soltar, pasar por encima) lleva los cues mas neutros y cortos; lo
+ * que pasa una vez a la semana (publicar un producto, exportar la lista) se
+ * queda los mas caracteristicos, que es donde lucen sin cansar.
+ */
+export const CUE = {
+  /** Una nota entra al muro. */
+  aprobado: "sparkle",
+  /** Algo se anade a una lista: una variante, una imagen. */
+  anadido: "droplet",
+  /** Un aviso que no es un error: hay algo esperando atencion. */
+  atencion: "pulse",
+  /** Accion destructiva. Apagado a proposito: no se celebra un borrado. */
+  borrar: "whisper",
+  /** Sesion iniciada. */
+  entrar: "arrival",
+  /** El CSV ya esta en el disco. */
+  exportado: "chime",
+  fallo: "error",
+  /** Un filtro o una busqueda acaban de recortar la lista. */
+  filtrado: "scan",
+  guardado: "success",
+  /** Arranca algo que va a tardar. */
+  ocupado: "loading",
+  /** Cambio de seccion. */
+  navegar: "page",
+  /** El producto sale a la venta. El momento mas alegre del panel. */
+  publicado: "bloom",
+  pulsar: "press",
+  /** Termino lo que tardaba. */
+  listo: "ready",
+  soltar: "release",
+  /** El raton pasa por encima de algo pulsable. */
+  pasar: "tick",
+  /** Un interruptor cambia de estado. */
+  alternar: "toggle",
+} as const satisfies Record<string, SoundName>;

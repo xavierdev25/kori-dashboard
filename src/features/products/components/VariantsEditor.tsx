@@ -12,6 +12,7 @@ import { Badge } from "@/shared/components/Badge";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Input } from "@/shared/components/Input";
+import { CUE } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductVariant } from "@/features/products/types/product.types";
@@ -77,6 +78,7 @@ function VariantRow({
         variant.isActive
           ? `${variant.label} retirada de la venta.`
           : `${variant.label} a la venta.`,
+        CUE.alternar,
       );
     } catch (toggleError) {
       const message = getErrorText(toggleError, "No se pudo cambiar el estado.");
@@ -218,7 +220,7 @@ function NewVariantForm({
       setSku("");
       setPrice("");
       await onCreated();
-      toast.success("Variante anadida.");
+      toast.success("Variante anadida.", CUE.anadido);
     } catch (createError) {
       const message = getErrorText(createError, "No se pudo crear la variante.");
       setError(message);

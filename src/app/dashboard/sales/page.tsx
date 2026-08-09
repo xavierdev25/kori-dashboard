@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { SalesTable } from "@/features/sales/components/SalesTable";
+import { SalesChart } from "@/features/sales/components/SalesChart";
 import { StatsPanel } from "@/features/sales/components/StatsPanel";
-import { useSales, useSalesStats } from "@/features/sales/hooks/useSales";
+import {
+  useSales,
+  useSalesStats,
+  useSalesTimeseries,
+} from "@/features/sales/hooks/useSales";
 import {
   getStatusLabel,
   STATUS_ORDER,
@@ -36,6 +41,7 @@ export default function SalesPage() {
     page,
   });
   const { stats } = useSalesStats(filters);
+  const { timeseries } = useSalesTimeseries(filters);
 
   function updateFilter(apply: () => void) {
     apply();
@@ -69,6 +75,16 @@ export default function SalesPage() {
           }
           name="overview-stats"
         />
+      )}
+
+      {timeseries ? (
+        <SalesChart
+          currency={timeseries.currency}
+          days={timeseries.days}
+          timeZone={timeseries.timeZone}
+        />
+      ) : (
+        <Bones fallback={<TableSkeleton columns={1} rows={4} />} name="sales-chart" />
       )}
 
       <Card className="grid gap-3 p-4 sm:grid-cols-3">

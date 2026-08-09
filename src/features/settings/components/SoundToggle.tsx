@@ -40,14 +40,23 @@ export function SoundToggle() {
             Sonidos del panel
           </h3>
           <p className="mt-1 text-sm leading-6 text-neutral-600">
-            Un chasquido al pulsar y un aviso distinto cuando algo sale bien o
-            falla. Se guarda en este navegador, no en la cuenta.
+            Cada accion suena distinto: publicar un producto no se parece a
+            guardar un precio ni a borrar un correo. Se guarda en este
+            navegador, no en la cuenta.
           </p>
         </div>
 
         <button
           aria-checked={enabled}
           aria-label="Sonidos del panel"
+          // Declarativo: cuelume engancha el clic por delegacion, y su
+          // escucha corre antes que la de React. De ahi que apagar suene una
+          // ultima vez (el clac del interruptor) y despues quede en silencio.
+          //
+          // Encender es al reves: el cue declarativo cae cuando el sonido
+          // todavia esta apagado y no se oye, asi que la confirmacion la da
+          // el `play` de `setSoundEnabled`. Uno u otro, nunca los dos.
+          data-cuelume-toggle=""
           className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
             enabled ? "bg-neutral-950" : "bg-neutral-300"
           } ${cargado ? "" : "opacity-50"}`}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Plus } from "@/shared/components/icons";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { buttonVariants } from "@/shared/components/Button";
@@ -11,6 +11,7 @@ import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
 import { TableSkeleton } from "@/shared/components/Skeleton";
+import { CUE, cue } from "@/shared/lib/sound";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 
 const PAGE_SIZE = 20;
@@ -29,6 +30,26 @@ export default function ProductsPage() {
     page,
     search: debouncedSearch,
   });
+
+  // El "scan" suena cuando la busqueda ya se aplico, no en cada tecla: va
+  // atado al valor con retardo, igual que la peticion.
+  //
+  // Se compara el filtro con el anterior en vez de llevar una bandera de
+  // "primer render": React monta los efectos dos veces en desarrollo, y una
+  // bandera se gasta en el primer montaje y deja sonar el segundo. Resultado:
+  // sonaba el filtro solo con entrar en la seccion, sin filtrar nada.
+  const filtroPrevio = useRef(`${debouncedSearch}|${visibility}`);
+
+  useEffect(() => {
+    const actual = `${debouncedSearch}|${visibility}`;
+
+    if (filtroPrevio.current === actual) {
+      return;
+    }
+
+    filtroPrevio.current = actual;
+    cue(CUE.filtrado);
+  }, [debouncedSearch, visibility]);
 
   return (
     <section className="grid gap-6">

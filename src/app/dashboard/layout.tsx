@@ -12,11 +12,11 @@ import {
   StickyNote,
 } from "@/shared/components/icons";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Button } from "@/shared/components/Button";
 import { PageLoader } from "@/shared/components/Spinner";
-import { initSound } from "@/shared/lib/sound";
+import { CUE, cue, initSound } from "@/shared/lib/sound";
 import { cn } from "@/shared/utils/cn";
 
 const navItems = [
@@ -45,6 +45,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     initSound();
   }, []);
+
+  // Un cue corto al cambiar de seccion. Se salta la primera pintura: entrar
+  // al panel ya sono con el "arrival" del login, y encadenar los dos queda
+  // atropellado.
+  const seccionPrevia = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (seccionPrevia.current !== null && seccionPrevia.current !== pathname) {
+      cue(CUE.navegar);
+    }
+
+    seccionPrevia.current = pathname;
+  }, [pathname]);
 
   if (isChecking || status === "guest") {
     return (
@@ -97,6 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           ? "border-neutral-950 bg-neutral-950 text-white"
                           : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100",
                       )}
+                      data-cuelume-hover="tick"
                       href={item.href}
                       key={item.href}
                     >

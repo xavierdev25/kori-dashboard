@@ -8,6 +8,7 @@ import type {
   SaleDetail,
   SalesQuery,
   SalesStats,
+  SalesTimeseries,
   SaleSummary,
 } from "@/features/sales/types/sale.types";
 
@@ -81,6 +82,45 @@ export function useSalesStats(query: SalesQuery) {
   }, [loadStats]);
 
   return { error, loading, refresh: loadStats, stats };
+}
+
+/**
+ * La serie diaria para la grafica.
+ *
+ * Hook aparte y no dentro de `useSalesStats` a proposito: son dos peticiones
+ * distintas y si una falla la otra debe seguir pintandose. Ademas ignora el
+ * filtro de estado — una grafica de ingresos filtrada por "cancelado" no
+ * significa nada.
+ */
+export function useSalesTimeseries(query: SalesQuery) {
+  const { from, to } = query;
+  const [timeseries, setTimeseries] = useState<SalesTimeseries | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    await Promise.resolve();
+    setLoading(true);
+    setError(null);
+
+    try {
+      setTimeseries(await salesService.getTimeseries({ from, to }));
+    } catch (requestError) {
+      setError(getErrorText(requestError, "No se pudo cargar la grafica."));
+    } finally {
+      setLoading(false);
+    }
+  }, [from, to]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [load]);
+
+  return { error, loading, refresh: load, timeseries };
 }
 
 export function useSale(id: string | null) {

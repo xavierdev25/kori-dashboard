@@ -12,13 +12,16 @@ import {
   TrendingUp,
 } from "@/shared/components/icons";
 import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useOverview } from "@/features/overview/hooks/useOverview";
+import { SalesChart } from "@/features/sales/components/SalesChart";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { formatDate } from "@/features/notes/utils/format-date";
 import {
   getStatusLabel,
   getStatusTone,
 } from "@/features/sales/utils/order-status";
+import { CUE, cue } from "@/shared/lib/sound";
 import { AnimatedNumber } from "@/shared/components/AnimatedNumber";
 import { Badge } from "@/shared/components/Badge";
 import { buttonVariants } from "@/shared/components/Button";
@@ -96,6 +99,27 @@ function Attention({
   );
 }
 
+/**
+ * Suena el cue de atencion cuando aparece un aviso.
+ *
+ * Va en su propio componente porque los hooks no pueden ir despues de los
+ * returns condicionales de la pagina, y este solo tiene sentido cuando ya
+ * hay datos. Suena una vez por sesion de pantalla: repetirlo en cada
+ * recarga de la lista seria una alarma, no un aviso.
+ */
+function AvisoSonoro({ activo }: { activo: boolean }) {
+  const yaSono = useRef(false);
+
+  useEffect(() => {
+    if (activo && !yaSono.current) {
+      yaSono.current = true;
+      cue(CUE.atencion);
+    }
+  }, [activo]);
+
+  return null;
+}
+
 export default function DashboardPage() {
   const { data, error, loading } = useOverview();
 
@@ -126,13 +150,23 @@ export default function DashboardPage() {
     );
   }
 
-  const { brokenPublished, draftCount, notes, publishedCount, recentSales, sales } =
-    data;
+  const {
+    brokenPublished,
+    draftCount,
+    notes,
+    publishedCount,
+    recentSales,
+    sales,
+    timeseries,
+  } = data;
   const needsReview = sales?.countByStatus.NEEDS_REVIEW ?? 0;
   const pendingNotes = notes?.totalPending ?? 0;
+  const hayAvisos = needsReview > 0 || brokenPublished.length > 0;
 
   return (
     <section className="grid gap-6">
+      <AvisoSonoro activo={hayAvisos} />
+
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-neutral-950">
           Resumen
@@ -203,6 +237,14 @@ export default function DashboardPage() {
           value={String(notes?.total ?? 0)}
         />
       </div>
+
+      {timeseries ? (
+        <SalesChart
+          currency={timeseries.currency}
+          days={timeseries.days}
+          timeZone={timeseries.timeZone}
+        />
+      ) : null}
 
       {publishedCount === 0 ? (
         <Card className="p-5">

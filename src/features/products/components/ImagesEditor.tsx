@@ -6,6 +6,8 @@ import { productsService } from "@/features/products/services/products.service";
 import { Badge } from "@/shared/components/Badge";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
+import { CUE, cue } from "@/shared/lib/sound";
+import type { SoundName } from "cuelume";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductImage } from "@/features/products/types/product.types";
@@ -31,6 +33,7 @@ export function ImagesEditor({
     action: () => Promise<unknown>,
     fallback: string,
     done?: string,
+    sonido?: SoundName,
   ) {
     setError(null);
     setBusy(true);
@@ -40,7 +43,7 @@ export function ImagesEditor({
       await onChanged();
 
       if (done) {
-        toast.success(done);
+        toast.success(done, sonido);
       }
     } catch (actionError) {
       const message = getErrorText(actionError, fallback);
@@ -72,10 +75,13 @@ export function ImagesEditor({
       return;
     }
 
+    // Subir tarda: se avisa al empezar y el "listo" cierra la operacion.
+    cue(CUE.ocupado);
     await run(
       () => productsService.uploadImage(productId, file),
       "No se pudo subir la imagen.",
       "Imagen subida.",
+      CUE.listo,
     );
   }
 
@@ -157,6 +163,7 @@ export function ImagesEditor({
                           productsService.setPrimaryImage(productId, image.id),
                         "No se pudo marcar como principal.",
                         "Imagen principal actualizada.",
+                        CUE.anadido,
                       )
                     }
                     size="sm"

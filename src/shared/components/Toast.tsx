@@ -10,7 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { cue } from "@/shared/lib/sound";
+import { CUE, cue } from "@/shared/lib/sound";
+import type { SoundName } from "cuelume";
 import { cn } from "@/shared/utils/cn";
 
 type ToastTone = "success" | "error";
@@ -23,7 +24,13 @@ interface Toast {
 
 interface ToastApi {
   error: (message: string) => void;
-  success: (message: string) => void;
+  /**
+   * `sonido` cambia el cue de este aviso concreto. Por defecto suena el de
+   * "guardado", que es lo que hace el noventa por ciento de las veces; quien
+   * publica un producto o aprueba una nota pasa el suyo, porque no es lo
+   * mismo y no tiene por qué sonar igual.
+   */
+  success: (message: string, sonido?: SoundName) => void;
 }
 
 const ToastContext = createContext<ToastApi | null>(null);
@@ -41,21 +48,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const push = useCallback((message: string, tone: ToastTone) => {
-    // Date.now() puede repetirse en el mismo milisegundo; el random evita
-    // que dos avisos casi simultaneos compartan key y React se confunda.
-    const id = Date.now() + Math.random();
+  const push = useCallback(
+    (message: string, tone: ToastTone, sonido?: SoundName) => {
+      // Date.now() puede repetirse en el mismo milisegundo; el random evita
+      // que dos avisos casi simultaneos compartan key y React se confunda.
+      const id = Date.now() + Math.random();
 
-    // El aviso suena por lo que es, no por donde ocurrio: un unico sitio
-    // cubre guardar, publicar, borrar y todo lo que venga despues.
-    cue(tone === "success" ? "success" : "error");
-    setToasts((current) => [...current, { id, message, tone }]);
-  }, []);
+      cue(sonido ?? (tone === "success" ? CUE.guardado : CUE.fallo));
+      setToasts((current) => [...current, { id, message, tone }]);
+    },
+    [],
+  );
 
   const api = useMemo<ToastApi>(
     () => ({
       error: (message) => push(message, "error"),
-      success: (message) => push(message, "success"),
+      success: (message, sonido) => push(message, "success", sonido),
     }),
     [push],
   );

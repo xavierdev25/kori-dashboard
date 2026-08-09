@@ -117,3 +117,17 @@ export interface SalesStats {
   salesCount: number;
   shippingRevenueCents: number;
 }
+
+/** Un dia de la grafica. Los dias sin ventas vienen a cero, no ausentes. */
+export interface SalesDay {
+  date: string;
+  grossRevenueCents: number;
+  salesCount: number;
+}
+
+export interface SalesTimeseries {
+  currency: string;
+  days: SalesDay[];
+  /** Zona con la que el backend corta los dias. El panel la muestra. */
+  timeZone: string;
+}

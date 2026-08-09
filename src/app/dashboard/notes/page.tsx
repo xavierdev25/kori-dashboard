@@ -13,6 +13,7 @@ import type { AdminNote, NotesFilterType } from "@/features/notes/types/note.typ
 import { Bones } from "@/shared/components/Bones";
 import { Button } from "@/shared/components/Button";
 import { StatSkeleton } from "@/shared/components/Skeleton";
+import { CUE } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 
@@ -62,7 +63,7 @@ export default function NotesPage() {
   async function handleApprove(note: AdminNote) {
     try {
       await notesService.approveNote(note.id);
-      toast.success("Nota aprobada: ya es visible en el muro.");
+      toast.success("Nota aprobada: ya es visible en el muro.", CUE.aprobado);
       await reload();
     } catch (error) {
       toast.error(getErrorText(error, "No se pudo aprobar la nota."));
@@ -72,7 +73,10 @@ export default function NotesPage() {
   async function handleReject(note: AdminNote) {
     try {
       await notesService.rejectNote(note.id);
-      toast.success("Nota quitada del muro: vuelve a quedar pendiente.");
+      toast.success(
+        "Nota quitada del muro: vuelve a quedar pendiente.",
+        CUE.alternar,
+      );
       await reload();
     } catch (error) {
       toast.error(getErrorText(error, "No se pudo quitar la nota del muro."));
