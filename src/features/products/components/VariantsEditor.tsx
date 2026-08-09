@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "@/shared/components/icons";
 import { FormEvent, useState } from "react";
 import { productsService } from "@/features/products/services/products.service";
 import {

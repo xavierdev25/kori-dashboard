@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, RefreshCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, Check, Download, RefreshCcw, Trash2, Undo2 } from "@/shared/components/icons";
 import { useRef, useState } from "react";
 import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotePreview } from "@/features/notes/components/NotePreview";
@@ -14,7 +14,7 @@ import { Badge } from "@/shared/components/Badge";
 import { Button, buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
 import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
@@ -132,9 +132,7 @@ export default function NoteDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-lg border border-neutral-200 bg-white">
-        <Spinner label="Cargando nota" />
-      </div>
+      <PageLoader label="Cargando nota" />
     );
   }
 

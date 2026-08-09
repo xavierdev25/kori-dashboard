@@ -10,7 +10,7 @@ import {
   ShoppingBag,
   StickyNote,
   TrendingUp,
-} from "lucide-react";
+} from "@/shared/components/icons";
 import type { ReactNode } from "react";
 import { useOverview } from "@/features/overview/hooks/useOverview";
 import { formatMoney } from "@/features/products/utils/format-money";
@@ -19,6 +19,7 @@ import {
   getStatusLabel,
   getStatusTone,
 } from "@/features/sales/utils/order-status";
+import { AnimatedNumber } from "@/shared/components/AnimatedNumber";
 import { Badge } from "@/shared/components/Badge";
 import { buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
@@ -46,9 +47,10 @@ function Stat({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-500">{label}</p>
-            <p className="mt-3 truncate text-2xl font-semibold tracking-tight text-neutral-950">
-              {value}
-            </p>
+            <AnimatedNumber
+              className="mt-3 block truncate text-2xl font-semibold tracking-tight text-neutral-950"
+              value={value}
+            />
             {hint ? (
               <p className="mt-1 text-xs text-neutral-500">{hint}</p>
             ) : null}

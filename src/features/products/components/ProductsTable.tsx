@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ImageOff } from "lucide-react";
+import { AlertTriangle, ImageOff } from "@/shared/components/icons";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { getPriceRange, getReadiness } from "@/features/products/utils/readiness";
 import { Badge } from "@/shared/components/Badge";

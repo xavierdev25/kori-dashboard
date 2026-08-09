@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, RefreshCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCcw } from "@/shared/components/icons";
 import { useState } from "react";
 import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotesFilters } from "@/features/notes/components/NotesFilters";
@@ -10,6 +10,7 @@ import { StatsCards } from "@/features/notes/components/StatsCards";
 import { useNotes, useNotesStats } from "@/features/notes/hooks/useNotes";
 import { notesService } from "@/features/notes/services/notes.service";
 import type { AdminNote, NotesFilterType } from "@/features/notes/types/note.types";
+import { Bones } from "@/shared/components/Bones";
 import { Button } from "@/shared/components/Button";
 import { StatSkeleton } from "@/shared/components/Skeleton";
 import { useToast } from "@/shared/components/Toast";
@@ -121,11 +122,16 @@ export default function NotesPage() {
       </div>
 
       {loadingStats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <StatSkeleton key={index} />
-          ))}
-        </div>
+        <Bones
+          fallback={
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <StatSkeleton key={index} />
+              ))}
+            </div>
+          }
+          name="notes-stats"
+        />
       ) : stats ? (
         <StatsCards stats={stats} />
       ) : null}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ExternalLink } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ExternalLink } from "@/shared/components/icons";
 import { formatDate } from "@/features/notes/utils/format-date";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { useSale } from "@/features/sales/hooks/useSales";
@@ -14,7 +14,7 @@ import { Badge } from "@/shared/components/Badge";
 import { buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
 import type { SaleDetail } from "@/features/sales/types/sale.types";
 
 function getParamId(id: string | string[] | undefined) {
@@ -57,9 +57,7 @@ export default function SaleDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <Spinner label="Cargando venta" />
-      </div>
+      <PageLoader label="Cargando venta" />
     );
   }
 

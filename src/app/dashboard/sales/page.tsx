@@ -9,6 +9,7 @@ import {
   STATUS_ORDER,
 } from "@/features/sales/utils/order-status";
 import { buttonVariants } from "@/shared/components/Button";
+import { Bones } from "@/shared/components/Bones";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
@@ -58,11 +59,16 @@ export default function SalesPage() {
       {stats ? (
         <StatsPanel stats={stats} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <StatSkeleton key={index} />
-          ))}
-        </div>
+        <Bones
+          fallback={
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <StatSkeleton key={index} />
+              ))}
+            </div>
+          }
+          name="overview-stats"
+        />
       )}
 
       <Card className="grid gap-3 p-4 sm:grid-cols-3">
@@ -107,7 +113,10 @@ export default function SalesPage() {
       ) : null}
 
       {loading ? (
-        <TableSkeleton columns={5} rows={5} />
+        <Bones
+          fallback={<TableSkeleton columns={5} rows={5} />}
+          name="sales-table"
+        />
       ) : sales.length === 0 ? (
         <EmptyState
           description={

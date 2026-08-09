@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus } from "@/shared/components/icons";
 import { useState } from "react";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { buttonVariants } from "@/shared/components/Button";
+import { Bones } from "@/shared/components/Bones";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
@@ -83,7 +84,10 @@ export default function ProductsPage() {
       ) : null}
 
       {loading ? (
-        <TableSkeleton columns={4} rows={5} />
+        <Bones
+          fallback={<TableSkeleton columns={4} rows={5} />}
+          name="products-table"
+        />
       ) : products.length === 0 ? (
         <EmptyState
           action={

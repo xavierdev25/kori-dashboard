@@ -1,0 +1,9 @@
+{
+  "breakpoints": [375, 768, 1280],
+  "out": "./src/bones",
+  "wait": 1500,
+  "color": "#e5e5e5",
+  "animate": "pulse",
+  "speed": "1.8s",
+  "routes": ["/bones"]
+}

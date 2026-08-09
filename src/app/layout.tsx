@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { ToastProvider } from "@/shared/components/Toast";
 import type { ReactNode } from "react";
+// Import con efecto secundario: registra los huesos generados por
+// `boneyard-js build` para que cada <Skeleton name="..."> los encuentre solo.
+import "@/bones/registry";
 import "./globals.css";
 
 export const metadata: Metadata = {

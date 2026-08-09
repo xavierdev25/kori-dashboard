@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
 
 export default function HomePage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Spinner label="Cargando dashboard" />
+      <PageLoader label="Cargando dashboard" />
     </main>
   );
 }

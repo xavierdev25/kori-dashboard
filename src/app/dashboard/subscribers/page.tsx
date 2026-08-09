@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Download, RefreshCcw, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, RefreshCcw, Trash2 } from "@/shared/components/icons";
 import { useCallback, useEffect, useState } from "react";
 import {
   subscribersService,

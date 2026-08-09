@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { RotateCcw, Search } from "lucide-react";
+import { RotateCcw, Search } from "@/shared/components/icons";
 import type {
   NotesFilterStatus,
   NotesFilterType,

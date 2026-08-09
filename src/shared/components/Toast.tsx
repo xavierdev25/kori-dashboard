@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, X } from "lucide-react";
+import { AlertTriangle, Check, X } from "@/shared/components/icons";
 import {
   createContext,
   useCallback,
@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { cue } from "@/shared/lib/sound";
 import { cn } from "@/shared/utils/cn";
 
 type ToastTone = "success" | "error";
@@ -45,6 +46,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     // que dos avisos casi simultaneos compartan key y React se confunda.
     const id = Date.now() + Math.random();
 
+    // El aviso suena por lo que es, no por donde ocurrio: un unico sitio
+    // cubre guardar, publicar, borrar y todo lo que venga despues.
+    cue(tone === "success" ? "success" : "error");
     setToasts((current) => [...current, { id, message, tone }]);
   }, []);
 

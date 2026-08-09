@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
-import { Loader2 } from "lucide-react";
+import { ThinkingOrb } from "thinking-orbs";
 import { cn } from "@/shared/utils/cn";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -61,11 +61,21 @@ export function Button({
   return (
     <button
       className={buttonVariants({ className, size, variant })}
+      // Pulsar y soltar suenan por separado: eso es lo que convierte un clic
+      // en algo con tacto. Cadena vacia = el cue por defecto del paquete.
+      // Van antes del spread para que una llamada concreta pueda cambiarlos.
+      //
+      // El boton rojo susurra en vez de chascar: lo que hay detras no se
+      // deshace, y un sonido mas apagado se lee como "ojo con esto".
+      data-cuelume-press={variant === "danger" ? "whisper" : ""}
+      data-cuelume-release={variant === "danger" ? "whisper" : ""}
       disabled={disabled || isLoading}
       type={type}
       {...props}
     >
-      {isLoading ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : leftIcon}
+      {/* El orbe de 20 es el preset pequeno del paquete: pintado a su tamano
+          exacto, que es donde esta afinado. Escalarlo lo emborrona. */}
+      {isLoading ? <ThinkingOrb aria-hidden size={20} theme="auto" /> : leftIcon}
       <span>{children}</span>
       {rightIcon}
     </button>

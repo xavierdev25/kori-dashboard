@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertTriangle, Receipt, TrendingUp, Undo2 } from "lucide-react";
+import { AlertTriangle, Receipt, TrendingUp, Undo2 } from "@/shared/components/icons";
 import { formatMoney } from "@/features/products/utils/format-money";
 import {
   getStatusLabel,
   getStatusTone,
 } from "@/features/sales/utils/order-status";
 import { Badge } from "@/shared/components/Badge";
+import { AnimatedNumber } from "@/shared/components/AnimatedNumber";
 import { Card } from "@/shared/components/Card";
 import type {
   OrderStatus,
@@ -39,9 +40,10 @@ export function StatsPanel({ stats }: { stats: SalesStats }) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-neutral-500">Ventas</p>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-neutral-950">
-                {stats.salesCount}
-              </p>
+              <AnimatedNumber
+                className="mt-3 block text-3xl font-semibold tracking-tight text-neutral-950"
+                value={String(stats.salesCount)}
+              />
             </div>
             <span className="rounded-md bg-neutral-100 p-2">
               <Receipt aria-hidden className="h-4 w-4 text-neutral-600" />
@@ -55,9 +57,10 @@ export function StatsPanel({ stats }: { stats: SalesStats }) {
               <p className="text-sm font-medium text-neutral-500">
                 Ingreso bruto
               </p>
-              <p className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950">
-                {formatMoney(stats.grossRevenueCents, stats.currency)}
-              </p>
+              <AnimatedNumber
+                className="mt-3 block text-2xl font-semibold tracking-tight text-neutral-950"
+                value={formatMoney(stats.grossRevenueCents, stats.currency)}
+              />
             </div>
             <span className="rounded-md bg-neutral-100 p-2">
               <TrendingUp aria-hidden className="h-4 w-4 text-neutral-600" />
@@ -67,9 +70,10 @@ export function StatsPanel({ stats }: { stats: SalesStats }) {
 
         <Card className="p-5">
           <p className="text-sm font-medium text-neutral-500">Neto estimado</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950">
-            {formatMoney(stats.estimatedNetRevenueCents, stats.currency)}
-          </p>
+          <AnimatedNumber
+            className="mt-3 block text-2xl font-semibold tracking-tight text-neutral-950"
+            value={formatMoney(stats.estimatedNetRevenueCents, stats.currency)}
+          />
           {/* La cifra real llega en la liquidacion de Stripe: aqui se dice que
               es una estimacion en vez de presentarlo como contabilidad. */}
           <p className="mt-2 text-xs leading-5 text-neutral-500">
@@ -88,9 +92,10 @@ export function StatsPanel({ stats }: { stats: SalesStats }) {
               <p className="text-sm font-medium text-neutral-500">
                 Reembolsado
               </p>
-              <p className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950">
-                {formatMoney(stats.refundedCents, stats.currency)}
-              </p>
+              <AnimatedNumber
+                className="mt-3 block text-2xl font-semibold tracking-tight text-neutral-950"
+                value={formatMoney(stats.refundedCents, stats.currency)}
+              />
               <p className="mt-1 text-xs text-neutral-500">
                 {stats.refundedCount} pedido
                 {stats.refundedCount === 1 ? "" : "s"}

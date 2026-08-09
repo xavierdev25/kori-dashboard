@@ -7,20 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bones": "boneyard-js build http://localhost:3100"
   },
   "dependencies": {
+    "cuelume": "^0.2.2",
     "html-to-image": "^1.11.13",
-    "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "reicon-react": "^1.2.0",
+    "slot-text": "^0.3.3",
+    "thinking-orbs": "^0.2.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.4",
+    "boneyard-js": "^1.9.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "jsdom": "^29.1.1",

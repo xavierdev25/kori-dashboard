@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "@/shared/components/icons";
 import { useState } from "react";
 import { ImagesEditor } from "@/features/products/components/ImagesEditor";
 import { ProductForm } from "@/features/products/components/ProductForm";
@@ -14,7 +14,7 @@ import { Badge } from "@/shared/components/Badge";
 import { Button, buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductInput } from "@/features/products/types/product.types";
@@ -33,9 +33,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <Spinner label="Cargando producto" />
-      </div>
+      <PageLoader label="Cargando producto" />
     );
   }
 

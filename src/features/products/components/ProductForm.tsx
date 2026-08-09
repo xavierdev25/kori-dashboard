@@ -1,6 +1,6 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { Save } from "@/shared/components/icons";
 import { FormEvent, useState } from "react";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";

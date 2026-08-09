@@ -10,12 +10,13 @@ import {
   Settings,
   Shirt,
   StickyNote,
-} from "lucide-react";
+} from "@/shared/components/icons";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Button } from "@/shared/components/Button";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
+import { initSound } from "@/shared/lib/sound";
 import { cn } from "@/shared/utils/cn";
 
 const navItems = [
@@ -39,10 +40,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [router, status]);
 
+  // Engancha los data-cuelume-* por delegacion. Una sola vez y para todo el
+  // panel: lo que se pinte despues suena igual, sin volver a escanear.
+  useEffect(() => {
+    initSound();
+  }, []);
+
   if (isChecking || status === "guest") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Spinner label="Verificando sesion" />
+        {/* "connecting" y no "working": lo que pasa aqui es que se esta
+            hablando con el backend para validar la cookie. */}
+        <PageLoader label="Verificando sesion" state="connecting" />
       </main>
     );
   }

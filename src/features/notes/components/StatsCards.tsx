@@ -1,5 +1,6 @@
-import { Clock, FileText, Images, StickyNote } from "lucide-react";
+import { Clock, FileText, Images, StickyNote } from "@/shared/components/icons";
 import type { NotesStats } from "@/features/notes/types/note.types";
+import { AnimatedNumber } from "@/shared/components/AnimatedNumber";
 import { Card } from "@/shared/components/Card";
 
 const statItems = [
@@ -36,9 +37,10 @@ export function StatsCards({ stats }: { stats: NotesStats }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-neutral-500">{item.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-neutral-950">
-                  {stats[item.key]}
-                </p>
+                <AnimatedNumber
+                  className="mt-3 block text-3xl font-semibold tracking-tight text-neutral-950"
+                  value={String(stats[item.key])}
+                />
               </div>
               <span className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-700">
                 <Icon aria-hidden className="h-5 w-5" />

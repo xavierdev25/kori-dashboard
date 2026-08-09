@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/shared/components/icons";
 import { ProductForm } from "@/features/products/components/ProductForm";
 import { productsService } from "@/features/products/services/products.service";
 import { buttonVariants } from "@/shared/components/Button";

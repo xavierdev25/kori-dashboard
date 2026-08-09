@@ -1,13 +1,14 @@
 "use client";
 
-import { RefreshCcw, Save } from "lucide-react";
+import { RefreshCcw, Save } from "@/shared/components/icons";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { settingsService } from "@/features/settings/services/settings.service";
 import { Button } from "@/shared/components/Button";
+import { SoundToggle } from "@/features/settings/components/SoundToggle";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
-import { Spinner } from "@/shared/components/Spinner";
+import { PageLoader } from "@/shared/components/Spinner";
 import { getErrorText } from "@/shared/lib/error-message";
 import { cn } from "@/shared/utils/cn";
 
@@ -95,9 +96,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-lg border border-neutral-200 bg-white">
-        <Spinner label="Cargando ajustes" />
-      </div>
+      <PageLoader label="Cargando ajustes" />
     );
   }
 
@@ -180,6 +179,8 @@ export default function SettingsPage() {
           </div>
         </form>
       </Card>
+
+      <SoundToggle />
     </section>
   );
 }

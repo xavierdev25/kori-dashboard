@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Star, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Star, Trash2, Upload } from "@/shared/components/icons";
 import { ChangeEvent, useState } from "react";
 import { productsService } from "@/features/products/services/products.service";
 import { Badge } from "@/shared/components/Badge";

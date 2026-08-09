@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Eye, RefreshCcw, Trash2, Download, Undo2 } from "lucide-react";
+import { Check, Eye, RefreshCcw, Trash2, Download, Undo2 } from "@/shared/components/icons";
 import { useRef, useState } from "react";
 import type { AdminNote } from "@/features/notes/types/note.types";
 import { formatDate } from "@/features/notes/utils/format-date";
@@ -9,6 +9,7 @@ import { downloadNoteImage } from "@/features/notes/utils/download-note-image";
 import { NotePreview } from "@/features/notes/components/NotePreview";
 import { Badge } from "@/shared/components/Badge";
 import { Button, buttonVariants } from "@/shared/components/Button";
+import { Bones } from "@/shared/components/Bones";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { TableSkeleton } from "@/shared/components/Skeleton";
 
@@ -149,7 +150,12 @@ export function NotesTable({
   onReject: (note: AdminNote) => void;
 }) {
   if (loading) {
-    return <TableSkeleton columns={5} rows={6} />;
+    return (
+      <Bones
+        fallback={<TableSkeleton columns={5} rows={6} />}
+        name="notes-table"
+      />
+    );
   }
 
   if (error) {
