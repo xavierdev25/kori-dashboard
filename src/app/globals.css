@@ -42,3 +42,28 @@ textarea {
   background: #111827;
   color: #ffffff;
 }
+
+/* Entrada de los avisos. Va bajo motion-safe en el componente, asi que
+   quien pide "reducir movimiento" en su sistema no lo ve. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* La barra de navegacion en movil desborda a proposito. Se le quita la barra
+   de scroll para que no corte el diseno, pero se conserva el desplazamiento
+   y el ajuste por elemento. */
+.nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-scroll::-webkit-scrollbar {
+  display: none;
+}

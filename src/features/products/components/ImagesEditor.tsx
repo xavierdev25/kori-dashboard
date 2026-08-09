@@ -6,6 +6,7 @@ import { productsService } from "@/features/products/services/products.service";
 import { Badge } from "@/shared/components/Badge";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
+import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductImage } from "@/features/products/types/product.types";
 
@@ -24,16 +25,27 @@ export function ImagesEditor({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
-  async function run(action: () => Promise<unknown>, fallback: string) {
+  async function run(
+    action: () => Promise<unknown>,
+    fallback: string,
+    done?: string,
+  ) {
     setError(null);
     setBusy(true);
 
     try {
       await action();
       await onChanged();
+
+      if (done) {
+        toast.success(done);
+      }
     } catch (actionError) {
-      setError(getErrorText(actionError, fallback));
+      const message = getErrorText(actionError, fallback);
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -63,6 +75,7 @@ export function ImagesEditor({
     await run(
       () => productsService.uploadImage(productId, file),
       "No se pudo subir la imagen.",
+      "Imagen subida.",
     );
   }
 
@@ -143,6 +156,7 @@ export function ImagesEditor({
                         () =>
                           productsService.setPrimaryImage(productId, image.id),
                         "No se pudo marcar como principal.",
+                        "Imagen principal actualizada.",
                       )
                     }
                     size="sm"
@@ -178,6 +192,7 @@ export function ImagesEditor({
                       void run(
                         () => productsService.deleteImage(productId, image.id),
                         "No se pudo borrar la imagen.",
+                        "Imagen borrada.",
                       )
                     }
                     size="sm"

@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Spinner } from "@/shared/components/Spinner";
+import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductInput } from "@/features/products/types/product.types";
 
@@ -26,6 +27,7 @@ export default function ProductDetailPage() {
   const params = useParams<{ id?: string | string[] }>();
   const id = getParamId(params.id);
   const { error, loading, product, refresh } = useProduct(id);
+  const toast = useToast();
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -56,6 +58,7 @@ export default function ProductDetailPage() {
   async function handleUpdate(input: ProductInput) {
     await productsService.updateProduct(id!, input);
     await refresh();
+    toast.success("Datos del producto guardados.");
   }
 
   async function togglePublished() {
@@ -63,14 +66,23 @@ export default function ProductDetailPage() {
     setIsPublishing(true);
 
     try {
-      await productsService.updateProduct(id!, { isActive: !product!.isActive });
+      const wasActive = product!.isActive;
+      await productsService.updateProduct(id!, { isActive: !wasActive });
       await refresh();
+      toast.success(
+        wasActive
+          ? "Producto despublicado: ya no aparece en la tienda."
+          : "Producto publicado: ya está a la venta.",
+      );
     } catch (toggleError) {
       // El backend vuelve a validar y responde 409 nombrando lo que falta:
       // ese mensaje es mas util que cualquiera que inventemos aqui.
-      setPublishError(
-        getErrorText(toggleError, "No se pudo cambiar la publicacion."),
+      const message = getErrorText(
+        toggleError,
+        "No se pudo cambiar la publicacion.",
       );
+      setPublishError(message);
+      toast.error(message);
     } finally {
       setIsPublishing(false);
     }

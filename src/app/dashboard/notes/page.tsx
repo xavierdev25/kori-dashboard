@@ -6,12 +6,14 @@ import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotesFilters } from "@/features/notes/components/NotesFilters";
 import type { NotesFiltersValue } from "@/features/notes/components/NotesFilters";
 import { NotesTable } from "@/features/notes/components/NotesTable";
-import { useNotes } from "@/features/notes/hooks/useNotes";
+import { StatsCards } from "@/features/notes/components/StatsCards";
+import { useNotes, useNotesStats } from "@/features/notes/hooks/useNotes";
 import { notesService } from "@/features/notes/services/notes.service";
 import type { AdminNote, NotesFilterType } from "@/features/notes/types/note.types";
 import { Button } from "@/shared/components/Button";
+import { StatSkeleton } from "@/shared/components/Skeleton";
+import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
-import { cn } from "@/shared/utils/cn";
 
 interface NotesPageFilters extends NotesFiltersValue {
   page: number;
@@ -27,10 +29,8 @@ export default function NotesPage() {
   });
   const [deleteTarget, setDeleteTarget] = useState<AdminNote | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [feedback, setFeedback] = useState<{
-    message: string;
-    tone: "success" | "error";
-  } | null>(null);
+  const toast = useToast();
+  const { loading: loadingStats, refresh: refreshStats, stats } = useNotesStats();
 
   const { error, loading, meta, notes, refresh } = useNotes({
     limit: filters.limit,
@@ -47,47 +47,34 @@ export default function NotesPage() {
       page: 1,
       type: nextValue.type as NotesFilterType,
     }));
-    setFeedback(null);
   }
 
   function goToPage(page: number) {
     setFilters((current) => ({ ...current, page }));
-    setFeedback(null);
+  }
+
+  /** Toda accion mueve el contador de pendientes: las metricas se releen. */
+  async function reload() {
+    await Promise.all([refresh(), refreshStats()]);
   }
 
   async function handleApprove(note: AdminNote) {
-    setFeedback(null);
-
     try {
       await notesService.approveNote(note.id);
-      setFeedback({
-        message: "Nota aprobada: ya es visible en el muro.",
-        tone: "success",
-      });
-      await refresh();
+      toast.success("Nota aprobada: ya es visible en el muro.");
+      await reload();
     } catch (error) {
-      setFeedback({
-        message: getErrorText(error, "No se pudo aprobar la nota."),
-        tone: "error",
-      });
+      toast.error(getErrorText(error, "No se pudo aprobar la nota."));
     }
   }
 
   async function handleReject(note: AdminNote) {
-    setFeedback(null);
-
     try {
       await notesService.rejectNote(note.id);
-      setFeedback({
-        message: "Nota quitada del muro: vuelve a quedar pendiente.",
-        tone: "success",
-      });
-      await refresh();
+      toast.success("Nota quitada del muro: vuelve a quedar pendiente.");
+      await reload();
     } catch (error) {
-      setFeedback({
-        message: getErrorText(error, "No se pudo quitar la nota del muro."),
-        tone: "error",
-      });
+      toast.error(getErrorText(error, "No se pudo quitar la nota del muro."));
     }
   }
 
@@ -97,18 +84,14 @@ export default function NotesPage() {
     }
 
     setIsDeleting(true);
-    setFeedback(null);
 
     try {
       await notesService.deleteNote(deleteTarget.id);
-      setFeedback({ message: "Nota borrada correctamente.", tone: "success" });
+      toast.success("Nota borrada correctamente.");
       setDeleteTarget(null);
-      await refresh();
+      await reload();
     } catch (error) {
-      setFeedback({
-        message: getErrorText(error, "No se pudo borrar la nota."),
-        tone: "error",
-      });
+      toast.error(getErrorText(error, "No se pudo borrar la nota."));
     } finally {
       setIsDeleting(false);
     }
@@ -130,27 +113,24 @@ export default function NotesPage() {
         <Button
           disabled={loading}
           leftIcon={<RefreshCcw aria-hidden className="h-4 w-4" />}
-          onClick={refresh}
+          onClick={() => void reload()}
           variant="secondary"
         >
           Actualizar
         </Button>
       </div>
 
-      <NotesFilters disabled={loading} onChange={updateFilters} value={filters} />
-
-      {feedback ? (
-        <div
-          className={cn(
-            "rounded-md border px-4 py-3 text-sm font-medium",
-            feedback.tone === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-red-200 bg-red-50 text-red-800",
-          )}
-        >
-          {feedback.message}
+      {loadingStats ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <StatSkeleton key={index} />
+          ))}
         </div>
+      ) : stats ? (
+        <StatsCards stats={stats} />
       ) : null}
+
+      <NotesFilters disabled={loading} onChange={updateFilters} value={filters} />
 
       <NotesTable
         error={error}
@@ -158,7 +138,9 @@ export default function NotesPage() {
         notes={notes}
         onApprove={handleApprove}
         onDelete={setDeleteTarget}
-        onFeedback={(message, tone) => setFeedback({ message, tone })}
+        onFeedback={(message, tone) =>
+          tone === "success" ? toast.success(message) : toast.error(message)
+        }
         onRefresh={refresh}
         onReject={handleReject}
       />

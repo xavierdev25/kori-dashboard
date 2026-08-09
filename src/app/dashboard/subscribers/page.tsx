@@ -11,10 +11,11 @@ import type {
   Subscriber,
 } from "@/features/subscribers/types/subscriber.types";
 import { Button } from "@/shared/components/Button";
+import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Spinner } from "@/shared/components/Spinner";
+import { TableSkeleton } from "@/shared/components/Skeleton";
+import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
-import { cn } from "@/shared/utils/cn";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "medium",
@@ -30,10 +31,9 @@ export default function SubscribersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [feedback, setFeedback] = useState<{
-    message: string;
-    tone: "success" | "error";
-  } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const toast = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,24 +58,27 @@ export default function SubscribersPage() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  async function handleDelete(subscriber: Subscriber) {
-    setFeedback(null);
+  async function handleDelete() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setIsDeleting(true);
 
     try {
-      await subscribersService.deleteSubscriber(subscriber.id);
-      setFeedback({ message: "Correo eliminado.", tone: "success" });
+      await subscribersService.deleteSubscriber(deleteTarget.id);
+      toast.success(`${deleteTarget.email} eliminado de la lista.`);
+      setDeleteTarget(null);
       await load();
     } catch (error) {
-      setFeedback({
-        message: getErrorText(error, "No se pudo eliminar el correo."),
-        tone: "error",
-      });
+      toast.error(getErrorText(error, "No se pudo eliminar el correo."));
+    } finally {
+      setIsDeleting(false);
     }
   }
 
   async function handleExport() {
     setIsExporting(true);
-    setFeedback(null);
 
     try {
       const all = await subscribersService.getAllSubscribers();
@@ -88,15 +91,9 @@ export default function SubscribersPage() {
       link.download = `kori-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
-      setFeedback({
-        message: `CSV generado con ${all.length} correos.`,
-        tone: "success",
-      });
+      toast.success(`CSV generado con ${all.length} correos.`);
     } catch (error) {
-      setFeedback({
-        message: getErrorText(error, "No se pudo exportar el CSV."),
-        tone: "error",
-      });
+      toast.error(getErrorText(error, "No se pudo exportar el CSV."));
     } finally {
       setIsExporting(false);
     }
@@ -110,6 +107,11 @@ export default function SubscribersPage() {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-neutral-950">
             Correos
+            {meta ? (
+              <span className="ml-2 align-middle text-base font-normal text-neutral-500">
+                {meta.total}
+              </span>
+            ) : null}
           </h2>
           <p className="mt-2 text-sm leading-6 text-neutral-600">
             Suscriptores del &quot;Coming soon&quot; de la landing, listos para
@@ -136,23 +138,8 @@ export default function SubscribersPage() {
         </div>
       </div>
 
-      {feedback ? (
-        <div
-          className={cn(
-            "rounded-md border px-4 py-3 text-sm font-medium",
-            feedback.tone === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-red-200 bg-red-50 text-red-800",
-          )}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
-
       {loading ? (
-        <div className="flex min-h-64 items-center justify-center rounded-lg border border-neutral-200 bg-white">
-          <Spinner label="Cargando correos" />
-        </div>
+        <TableSkeleton columns={2} rows={6} />
       ) : error ? (
         <EmptyState
           action={
@@ -188,11 +175,15 @@ export default function SubscribersPage() {
                     {dateFormatter.format(new Date(subscriber.createdAt))}
                   </p>
                 </div>
+                {/* En gris y no en rojo solido: repetido en cada fila, el rojo
+                    deja de significar "cuidado" y solo hace ruido. El peso
+                    visual va en el dialogo de confirmacion. */}
                 <Button
+                  aria-label={`Borrar ${subscriber.email}`}
                   leftIcon={<Trash2 aria-hidden className="h-4 w-4" />}
-                  onClick={() => handleDelete(subscriber)}
+                  onClick={() => setDeleteTarget(subscriber)}
                   size="sm"
-                  variant="danger"
+                  variant="ghost"
                 >
                   Borrar
                 </Button>
@@ -227,6 +218,16 @@ export default function SubscribersPage() {
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        description="Se borra de la lista de forma permanente. Si esa persona no vuelve a suscribirse, no habra manera de recuperar su correo para el anuncio del album."
+        detail={deleteTarget?.email}
+        isBusy={isDeleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => void handleDelete()}
+        open={Boolean(deleteTarget)}
+        title="Borrar correo"
+      />
     </section>
   );
 }

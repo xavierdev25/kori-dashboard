@@ -10,7 +10,7 @@ import { NotePreview } from "@/features/notes/components/NotePreview";
 import { Badge } from "@/shared/components/Badge";
 import { Button, buttonVariants } from "@/shared/components/Button";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Spinner } from "@/shared/components/Spinner";
+import { TableSkeleton } from "@/shared/components/Skeleton";
 
 function NoteTypeBadge({ note }: { note: AdminNote }) {
   return note.type === "DRAWING" ? (
@@ -113,11 +113,15 @@ function NoteActions({
         <span>Ver</span>
       </Link>
       <NoteDownloadButton note={note} onFeedback={onFeedback} />
+      {/* En gris y no en rojo solido: repetido en veinte filas, el rojo deja
+          de significar "cuidado" y le roba el ojo a "Aprobar", que es la
+          accion que de verdad se viene a hacer aqui. */}
       <Button
+        aria-label={`Borrar nota de ${note.recipientName}`}
         leftIcon={<Trash2 aria-hidden className="h-4 w-4" />}
         onClick={() => onDelete(note)}
         size="sm"
-        variant="danger"
+        variant="ghost"
       >
         Borrar
       </Button>
@@ -145,11 +149,7 @@ export function NotesTable({
   onReject: (note: AdminNote) => void;
 }) {
   if (loading) {
-    return (
-      <div className="flex min-h-64 items-center justify-center rounded-lg border border-neutral-200 bg-white">
-        <Spinner label="Cargando notas" />
-      </div>
-    );
+    return <TableSkeleton columns={5} rows={6} />;
   }
 
   if (error) {
@@ -261,12 +261,12 @@ export function NotesTable({
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap justify-end gap-2">
                     <NoteActions
-                note={note}
-                onApprove={onApprove}
-                onDelete={onDelete}
-                onFeedback={onFeedback}
-                onReject={onReject}
-              />
+                      note={note}
+                      onApprove={onApprove}
+                      onDelete={onDelete}
+                      onFeedback={onFeedback}
+                      onReject={onReject}
+                    />
                   </div>
                 </td>
               </tr>

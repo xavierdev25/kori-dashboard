@@ -12,7 +12,7 @@ import { buttonVariants } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
-import { Spinner } from "@/shared/components/Spinner";
+import { StatSkeleton, TableSkeleton } from "@/shared/components/Skeleton";
 import type { OrderStatus } from "@/features/sales/types/sale.types";
 
 const PAGE_SIZE = 20;
@@ -55,7 +55,15 @@ export default function SalesPage() {
         </p>
       </header>
 
-      {stats ? <StatsPanel stats={stats} /> : null}
+      {stats ? (
+        <StatsPanel stats={stats} />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <StatSkeleton key={index} />
+          ))}
+        </div>
+      )}
 
       <Card className="grid gap-3 p-4 sm:grid-cols-3">
         <label className="grid gap-2 text-sm font-medium text-neutral-800">
@@ -99,9 +107,7 @@ export default function SalesPage() {
       ) : null}
 
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner label="Cargando ventas" />
-        </div>
+        <TableSkeleton columns={5} rows={5} />
       ) : sales.length === 0 ? (
         <EmptyState
           description={

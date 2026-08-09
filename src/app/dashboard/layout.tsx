@@ -63,8 +63,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <nav className="flex gap-2" aria-label="Navegacion principal">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+            {/* overflow-x-auto + snap: en movil se desliza en vez de que
+                los ultimos elementos queden fuera de pantalla sin aviso.
+                La barra de scroll se oculta con .nav-scroll en globals.css. */}
+            <nav
+              aria-label="Navegacion principal"
+              className="nav-scroll -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1"
+            >
               {navItems
                 .filter((item) => !item.adminOnly || isAdmin)
                 .map((item) => {
@@ -77,7 +83,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   return (
                     <Link
                       className={cn(
-                        "inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+                        "inline-flex h-10 shrink-0 snap-start items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
                         active
                           ? "border-neutral-950 bg-neutral-950 text-white"
                           : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100",

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
@@ -8,6 +8,8 @@ type ButtonSize = "sm" | "md";
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   isLoading?: boolean;
   leftIcon?: ReactNode;
+  /** React 19 pasa `ref` como una prop mas: no hace falta forwardRef. */
+  ref?: Ref<HTMLButtonElement>;
   rightIcon?: ReactNode;
   size?: ButtonSize;
   variant?: ButtonVariant;

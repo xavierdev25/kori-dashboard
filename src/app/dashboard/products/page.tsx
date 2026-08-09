@@ -6,19 +6,27 @@ import { useState } from "react";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { buttonVariants } from "@/shared/components/Button";
+import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
-import { Spinner } from "@/shared/components/Spinner";
+import { TableSkeleton } from "@/shared/components/Skeleton";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 
 const PAGE_SIZE = 20;
+
+type Visibility = "" | "published" | "draft";
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [visibility, setVisibility] = useState<Visibility>("");
+  const debouncedSearch = useDebouncedValue(search);
+
   const { error, loading, meta, products } = useProducts({
+    isActive: visibility === "" ? undefined : visibility === "published",
     limit: PAGE_SIZE,
     page,
-    search,
+    search: debouncedSearch,
   });
 
   return (
@@ -39,16 +47,34 @@ export default function ProductsPage() {
         </Link>
       </header>
 
-      <Input
-        aria-label="Buscar productos"
-        name="search"
-        onChange={(event) => {
-          setSearch(event.target.value);
-          setPage(1);
-        }}
-        placeholder="Buscar por nombre o slug"
-        value={search}
-      />
+      <Card className="grid gap-3 p-4 sm:grid-cols-[1fr_auto]">
+        <Input
+          aria-label="Buscar productos"
+          name="search"
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
+          placeholder="Buscar por nombre o slug"
+          value={search}
+        />
+
+        <label className="grid gap-2 text-sm font-medium text-neutral-800">
+          <span>Visibilidad</span>
+          <select
+            className="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-950 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
+            onChange={(event) => {
+              setVisibility(event.target.value as Visibility);
+              setPage(1);
+            }}
+            value={visibility}
+          >
+            <option value="">Todos</option>
+            <option value="published">Publicados</option>
+            <option value="draft">Borradores</option>
+          </select>
+        </label>
+      </Card>
 
       {error ? (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
@@ -57,19 +83,19 @@ export default function ProductsPage() {
       ) : null}
 
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner label="Cargando productos" />
-        </div>
+        <TableSkeleton columns={4} rows={5} />
       ) : products.length === 0 ? (
         <EmptyState
           action={
-            <Link className={buttonVariants()} href="/dashboard/products/new">
-              Crear el primero
-            </Link>
+            search || visibility ? undefined : (
+              <Link className={buttonVariants()} href="/dashboard/products/new">
+                Crear el primero
+              </Link>
+            )
           }
           description={
-            search
-              ? "Ningun producto coincide con esa busqueda."
+            search || visibility
+              ? "Ningun producto coincide con esos filtros."
               : "Todavia no hay productos en la tienda."
           }
           title="Sin productos"

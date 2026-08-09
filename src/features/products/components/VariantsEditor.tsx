@@ -12,6 +12,7 @@ import { Badge } from "@/shared/components/Badge";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Input } from "@/shared/components/Input";
+import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
 import type { ProductVariant } from "@/features/products/types/product.types";
 
@@ -29,6 +30,7 @@ function VariantRow({
   const [printFile, setPrintFile] = useState(variant.printFileUrl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const toast = useToast();
 
   const priceCents = parseMoneyToCents(price);
   const dirty =
@@ -52,8 +54,11 @@ function VariantRow({
         providerProductUid: uid.trim() || undefined,
       });
       await onChanged();
+      toast.success(`${variant.label} guardada.`);
     } catch (saveError) {
-      setError(getErrorText(saveError, "No se pudo guardar la variante."));
+      const message = getErrorText(saveError, "No se pudo guardar la variante.");
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
@@ -68,8 +73,15 @@ function VariantRow({
         isActive: !variant.isActive,
       });
       await onChanged();
+      toast.success(
+        variant.isActive
+          ? `${variant.label} retirada de la venta.`
+          : `${variant.label} a la venta.`,
+      );
     } catch (toggleError) {
-      setError(getErrorText(toggleError, "No se pudo cambiar el estado."));
+      const message = getErrorText(toggleError, "No se pudo cambiar el estado.");
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
@@ -84,7 +96,9 @@ function VariantRow({
       await onChanged();
     } catch (deleteError) {
       // El backend responde 409 con el conteo de ventas si ya se vendio.
-      setError(getErrorText(deleteError, "No se pudo borrar la variante."));
+      const message = getErrorText(deleteError, "No se pudo borrar la variante.");
+      setError(message);
+      toast.error(message);
       setIsSaving(false);
     }
   }
@@ -176,6 +190,7 @@ function NewVariantForm({
   const [price, setPrice] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const toast = useToast();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -203,8 +218,11 @@ function NewVariantForm({
       setSku("");
       setPrice("");
       await onCreated();
+      toast.success("Variante anadida.");
     } catch (createError) {
-      setError(getErrorText(createError, "No se pudo crear la variante."));
+      const message = getErrorText(createError, "No se pudo crear la variante.");
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
