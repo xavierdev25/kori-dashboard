@@ -107,6 +107,29 @@ export const productsService = {
    * La imagen viaja como multipart. No se le pone Content-Type a mano: el
    * navegador tiene que anadir el boundary o el backend no sabe parsearlo.
    */
+  /**
+   * Sube el archivo que se vende (drumkit, preset).
+   *
+   * Va al bucket privado, no al de imagenes: nunca debe quedar accesible por
+   * URL publica. El backend responde con la variante ya actualizada.
+   */
+  uploadDigitalAsset(productId: string, variantId: string, file: File) {
+    const form = new FormData();
+    form.append("file", file);
+
+    return apiRequest<ProductVariant>(
+      `/admin/products/${productId}/variants/${variantId}/asset`,
+      { body: form, method: "POST" },
+    );
+  },
+
+  removeDigitalAsset(productId: string, variantId: string) {
+    return apiRequest<ProductVariant>(
+      `/admin/products/${productId}/variants/${variantId}/asset`,
+      { method: "DELETE" },
+    );
+  },
+
   uploadImage(productId: string, file: File, altText?: string) {
     const form = new FormData();
     form.append("file", file);

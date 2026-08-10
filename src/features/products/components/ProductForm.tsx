@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Input } from "@/shared/components/Input";
+import { parseMoneyToCents } from "@/features/products/utils/format-money";
 import type { ProductInput } from "@/features/products/types/product.types";
 
 /** Mismo formato que exige el backend y el CHECK de la base de datos. */
@@ -24,12 +25,21 @@ export function slugify(value: string) {
 export function ProductForm({
   initial,
   onSubmit,
+  showKind = false,
   submitLabel = "Guardar",
 }: {
   initial?: Partial<ProductInput>;
   onSubmit: (input: ProductInput) => Promise<void>;
+  /**
+   * Solo al crear. Que es el producto se decide una vez y no se cambia
+   * despues: un drumkit no se convierte en playera, y cambiarlo dejaria
+   * variantes y archivos sin sentido.
+   */
+  showKind?: boolean;
   submitLabel?: string;
 }) {
+  const [kind, setKind] = useState<"DIGITAL" | "POD">("DIGITAL");
+  const [price, setPrice] = useState("");
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
@@ -50,6 +60,14 @@ export function ProductForm({
       return;
     }
 
+    // El precio se manda en centavos: el resto del sistema no ve decimales.
+    const priceCents = kind === "DIGITAL" ? parseMoneyToCents(price) : null;
+
+    if (showKind && kind === "DIGITAL" && priceCents === null) {
+      setError("Escribe un precio valido, por ejemplo 20.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -57,6 +75,13 @@ export function ProductForm({
         description: description.trim() || undefined,
         name: name.trim(),
         slug: slug.trim(),
+        ...(showKind
+          ? {
+              fulfillmentType: kind,
+              type: kind === "DIGITAL" ? "DIGITAL" : "POD_APPAREL",
+              ...(priceCents !== null ? { priceCents } : {}),
+            }
+          : {}),
       });
     } catch (submitError) {
       setError(
@@ -72,6 +97,54 @@ export function ProductForm({
   return (
     <Card className="p-5">
       <form className="grid gap-4" onSubmit={handleSubmit}>
+        {showKind ? (
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-medium text-neutral-800">
+              Que vas a vender
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(
+                [
+                  {
+                    hint: "Un archivo que se descarga tras pagar",
+                    label: "Drumkit o preset",
+                    value: "DIGITAL" as const,
+                  },
+                  {
+                    hint: "Se imprime y se envia por correo",
+                    label: "Merch (playera, gorra)",
+                    value: "POD" as const,
+                  },
+                ]
+              ).map((option) => (
+                <label
+                  className={`cursor-pointer rounded-md border p-3 text-sm transition ${
+                    kind === option.value
+                      ? "border-neutral-950 bg-neutral-50"
+                      : "border-neutral-300 hover:bg-neutral-50"
+                  }`}
+                  key={option.value}
+                >
+                  <input
+                    checked={kind === option.value}
+                    className="sr-only"
+                    name="kind"
+                    onChange={() => setKind(option.value)}
+                    type="radio"
+                    value={option.value}
+                  />
+                  <span className="block font-medium text-neutral-950">
+                    {option.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-neutral-600">
+                    {option.hint}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+
         <Input
           label="Nombre"
           name="name"
@@ -101,6 +174,20 @@ export function ProductForm({
           required
           value={slug}
         />
+
+        {showKind && kind === "DIGITAL" ? (
+          <Input
+            error={price && parseMoneyToCents(price) === null ? "Importe no valido" : undefined}
+            hint="Un drumkit no tiene tallas: lleva un solo precio."
+            inputMode="decimal"
+            label="Precio (USD)"
+            name="price"
+            onChange={(event) => setPrice(event.target.value)}
+            placeholder="20"
+            required
+            value={price}
+          />
+        ) : null}
 
         <label className="grid gap-2 text-sm font-medium text-neutral-800">
           <span>Descripcion</span>

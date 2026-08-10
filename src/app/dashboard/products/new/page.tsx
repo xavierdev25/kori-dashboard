@@ -33,11 +33,11 @@ export default function NewProductPage() {
           Nuevo producto
         </h2>
         <p className="mt-1 text-sm text-neutral-600">
-          Se crea como borrador. Las tallas y las fotos se anaden despues.
+          Se crea como borrador. El archivo y las fotos se anaden despues.
         </p>
       </div>
 
-      <ProductForm onSubmit={handleCreate} submitLabel="Crear producto" />
+      <ProductForm onSubmit={handleCreate} showKind submitLabel="Crear producto" />
     </section>
   );
 }

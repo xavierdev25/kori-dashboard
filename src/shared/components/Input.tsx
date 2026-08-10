@@ -3,10 +3,19 @@ import { cn } from "@/shared/utils/cn";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
+  /** Aclaración bajo el campo. Desaparece si hay error: manda el error. */
+  hint?: string;
   label?: string;
 };
 
-export function Input({ className, error, id, label, ...props }: InputProps) {
+export function Input({
+  className,
+  error,
+  hint,
+  id,
+  label,
+  ...props
+}: InputProps) {
   const inputId = id || props.name;
 
   return (
@@ -21,7 +30,11 @@ export function Input({ className, error, id, label, ...props }: InputProps) {
         id={inputId}
         {...props}
       />
-      {error ? <span className="text-xs font-medium text-red-700">{error}</span> : null}
+      {error ? (
+        <span className="text-xs font-medium text-red-700">{error}</span>
+      ) : hint ? (
+        <span className="text-xs font-normal text-neutral-500">{hint}</span>
+      ) : null}
     </label>
   );
 }

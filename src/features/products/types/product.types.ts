@@ -19,6 +19,10 @@ export interface ProductVariant {
   /** En centavos. Nunca dividir antes de mostrar sin pasar por formatMoney. */
   priceCents: number;
   printFileUrl: string | null;
+  /** Peso del archivo de venta, para poder mostrarlo sin ir al almacen. */
+  digitalAssetBytes: number | null;
+  /** Ruta interna en el bucket privado. Nunca es una URL descargable. */
+  digitalAssetPath: string | null;
   /** Identificador de la prenda en el proveedor de impresion. */
   providerProductUid: string | null;
   size: string | null;
@@ -65,7 +69,13 @@ export interface ProductsQuery {
 
 export interface ProductInput {
   description?: string;
+  fulfillmentType?: FulfillmentType;
   name: string;
+  /**
+   * Solo para productos digitales, y solo al crearlos: el backend genera con
+   * el la variante unica. Un drumkit no tiene tallas que llevar precio.
+   */
+  priceCents?: number;
   slug: string;
   type?: ProductType;
 }

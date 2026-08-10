@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "@/shared/components/icons";
 import { useState } from "react";
+import { DigitalAssetEditor } from "@/features/products/components/DigitalAssetEditor";
 import { ImagesEditor } from "@/features/products/components/ImagesEditor";
 import { ProductForm } from "@/features/products/components/ProductForm";
 import { VariantsEditor } from "@/features/products/components/VariantsEditor";
@@ -169,11 +170,20 @@ export default function ProductDetailPage() {
         ) : null}
       </Card>
 
-      <VariantsEditor
-        onChanged={refresh}
-        productId={product.id}
-        variants={product.variants}
-      />
+      {/* Un drumkit no tiene tallas: en su lugar va el archivo que se vende. */}
+      {product.fulfillmentType === "DIGITAL" ? (
+        <DigitalAssetEditor
+          onChanged={refresh}
+          productId={product.id}
+          variant={product.variants[0]}
+        />
+      ) : (
+        <VariantsEditor
+          onChanged={refresh}
+          productId={product.id}
+          variants={product.variants}
+        />
+      )}
 
       <ImagesEditor
         images={product.images}
