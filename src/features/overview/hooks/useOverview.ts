@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { notesService } from "@/features/notes/services/notes.service";
 import { productsService } from "@/features/products/services/products.service";
 import { salesService } from "@/features/sales/services/sales.service";
 import { getReadiness } from "@/features/products/utils/readiness";
-import { getErrorText } from "@/shared/lib/error-message";
+import { useAsyncData } from "@/shared/hooks/useAsyncData";
 import type { NotesStats } from "@/features/notes/types/note.types";
 import type { ProductSummary } from "@/features/products/types/product.types";
 import type {
@@ -45,62 +45,41 @@ function ultimosDias(dias: number): string {
 }
 
 export function useOverview() {
-  const [data, setData] = useState<Overview | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const load = useCallback(async (signal: AbortSignal): Promise<Overview> => {
+    const [products, notes, sales, recentSales, timeseries] = await Promise.all([
+      productsService.getProducts({ limit: 100 }, signal),
+      notesService.getStats(signal).catch(() => null),
+      salesService.getStats({}, signal).catch(() => null),
+      salesService
+        .getSales({ limit: 5 }, signal)
+        .then((response) => response.data)
+        .catch(() => []),
+      // Ultimos 14 dias: en una tarjeta compacta, treinta barras se
+      // convierten en un peine ilegible.
+      salesService
+        .getTimeseries({ from: ultimosDias(14) }, signal)
+        .catch(() => null),
+    ]);
 
-  const load = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+    const published = products.data.filter((product) => product.isActive);
 
-    try {
-      const [products, notes, sales, recentSales, timeseries] =
-        await Promise.all([
-          productsService.getProducts({ limit: 100 }),
-          notesService.getStats().catch(() => null),
-          salesService.getStats().catch(() => null),
-          salesService
-            .getSales({ limit: 5 })
-            .then((response) => response.data)
-            .catch(() => []),
-          // Ultimos 14 dias: en una tarjeta compacta, treinta barras se
-          // convierten en un peine ilegible.
-          salesService
-            .getTimeseries({ from: ultimosDias(14) })
-            .catch(() => null),
-        ]);
-
-      const published = products.data.filter((product) => product.isActive);
-
-      setData({
-        // Publicado pero ya no producible: alguien puede pagar algo que el
-        // proveedor rechazara. Es lo primero que hay que ver al entrar.
-        brokenPublished: published.filter(
-          (product) => !getReadiness(product).canPublish,
-        ),
-        draftCount: products.data.length - published.length,
-        notes,
-        publishedCount: published.length,
-        recentSales,
-        sales,
-        timeseries,
-      });
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudo cargar el resumen."));
-    } finally {
-      setLoading(false);
-    }
+    return {
+      // Publicado pero ya no producible: alguien puede pagar algo que el
+      // proveedor rechazara. Es lo primero que hay que ver al entrar.
+      brokenPublished: published.filter(
+        (product) => !getReadiness(product).canPublish,
+      ),
+      draftCount: products.data.length - published.length,
+      notes,
+      publishedCount: published.length,
+      recentSales,
+      sales,
+      timeseries,
+    };
   }, []);
 
-  // Diferido un tick: React 19 prohibe setState sincrono dentro de un efecto.
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void load();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [load]);
-
-  return { data, error, loading, refresh: load };
+  return useAsyncData<Overview | null>(load, {
+    fallbackMessage: "No se pudo cargar el resumen.",
+    initialData: null,
+  });
 }

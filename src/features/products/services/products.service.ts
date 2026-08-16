@@ -62,12 +62,14 @@ export const productsService = {
     );
   },
 
-  getProduct(id: string) {
-    return apiRequest<ProductDetail>(`/admin/products/${id}`);
+  getProduct(id: string, signal?: AbortSignal) {
+    return apiRequest<ProductDetail>(`/admin/products/${id}`, { signal });
   },
 
-  getProducts(query: ProductsQuery = {}) {
-    return apiRequest<PaginatedProducts>(`/admin/products${buildQuery(query)}`);
+  getProducts(query: ProductsQuery = {}, signal?: AbortSignal) {
+    return apiRequest<PaginatedProducts>(`/admin/products${buildQuery(query)}`, {
+      signal,
+    });
   },
 
   /** Lista completa de ids en el orden final tras arrastrar. */

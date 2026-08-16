@@ -1,6 +1,10 @@
-allowBuilds:
-  sharp: false
-  unrs-resolver: false
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+# Versiones forzadas para dependencias que `next` trae clavadas y no podemos
+# subir de otra forma. Las tres son herramientas de compilacion —procesan CSS
+# e imagenes al construir— y no llegan al navegador, pero un aviso de
+# severidad alta que se queda ahi para siempre acaba enseñando a ignorar la
+# auditoria entera, y entonces el dia que salga uno que si importa tampoco se
+# mira.
+overrides:
+  postcss: ^8.5.18
+  nanoid: ^3.3.18
+  sharp: ^0.35.0

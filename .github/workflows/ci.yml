@@ -43,8 +43,19 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      # El build ya comprueba tipos, pero lo hace al final: si falla algo aqui
+      # se sabe en segundos en vez de esperar a que compile todo.
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
       - name: Unit tests
         run: pnpm exec vitest run
 
       - name: Build
         run: pnpm run build
+
+      # Solo --prod: las de desarrollo no llegan al navegador y bloquear el
+      # despliegue por una herramienta de compilacion acaba enseñando a saltarse
+      # el paso, que es peor que no tenerlo.
+      - name: Audit production dependencies
+        run: pnpm audit --audit-level=moderate --prod

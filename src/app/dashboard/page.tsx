@@ -14,7 +14,7 @@ import {
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useOverview } from "@/features/overview/hooks/useOverview";
-import { SalesChart } from "@/features/sales/components/SalesChart";
+import { SalesChart } from "@/features/sales/components/SalesChartLazy";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { formatDate } from "@/features/notes/utils/format-date";
 import {

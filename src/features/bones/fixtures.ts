@@ -48,6 +48,7 @@ export const productosDeMuestra: ProductSummary[] = Array.from(
         label: "M / Negro",
         priceCents: 59900,
         printFileUrl: "https://kori.mx/print.png",
+      digitalAssetPath: null,
         providerProductUid: "CTP-GILDAN-M",
       },
     ],

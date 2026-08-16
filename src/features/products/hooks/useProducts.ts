@@ -1,89 +1,54 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { productsService } from "@/features/products/services/products.service";
-import { getErrorText } from "@/shared/lib/error-message";
+import { useAsyncData } from "@/shared/hooks/useAsyncData";
 import type {
   PaginatedProducts,
   ProductDetail,
   ProductsQuery,
-  ProductSummary,
 } from "@/features/products/types/product.types";
+
+const NO_PRODUCTS: PaginatedProducts = {
+  data: [],
+  meta: { limit: 20, page: 1, total: 0, totalPages: 0 },
+};
 
 export function useProducts(query: ProductsQuery) {
   const { isActive, limit, page, search } = query;
-  const [products, setProducts] = useState<ProductSummary[]>([]);
-  const [meta, setMeta] = useState<PaginatedProducts["meta"] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadProducts = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      productsService.getProducts({ isActive, limit, page, search }, signal),
+    [isActive, limit, page, search],
+  );
 
-    try {
-      const response = await productsService.getProducts({
-        isActive,
-        limit,
-        page,
-        search,
-      });
-      setProducts(response.data);
-      setMeta(response.meta);
-    } catch (requestError) {
-      setError(
-        getErrorText(requestError, "No se pudieron cargar los productos."),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [isActive, limit, page, search]);
+  const { data, error, loading, refresh } = useAsyncData(load, {
+    fallbackMessage: "No se pudieron cargar los productos.",
+    initialData: NO_PRODUCTS,
+  });
 
-  // Mismo patron que useNotes: el compilador de React 19 prohibe llamar a
-  // setState de forma sincrona dentro de un efecto, y diferirlo un tick lo
-  // saca del cuerpo del efecto.
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadProducts();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadProducts]);
-
-  return { error, loading, meta, products, refresh: loadProducts };
+  return { error, loading, meta: data.meta, products: data.data, refresh };
 }
 
 export function useProduct(id: string | null) {
-  const [product, setProduct] = useState<ProductDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(Boolean(id));
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      id ? productsService.getProduct(id, signal) : Promise.resolve(null),
+    [id],
+  );
 
-  const loadProduct = useCallback(async () => {
-    if (!id) {
-      return;
-    }
+  const {
+    data,
+    error,
+    loading,
+    refresh,
+    setData,
+  } = useAsyncData<ProductDetail | null>(load, {
+    enabled: Boolean(id),
+    fallbackMessage: "No se pudo cargar el producto.",
+    initialData: null,
+  });
 
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
-
-    try {
-      setProduct(await productsService.getProduct(id));
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudo cargar el producto."));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadProduct();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadProduct]);
-
-  return { error, loading, product, refresh: loadProduct };
+  return { error, loading, product: data, refresh, setProduct: setData };
 }

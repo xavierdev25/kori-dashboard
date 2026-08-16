@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, RefreshCcw } from "@/shared/components/icons";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { DeleteNoteDialog } from "@/features/notes/components/DeleteNoteDialog";
 import { NotesFilters } from "@/features/notes/components/NotesFilters";
 import type { NotesFiltersValue } from "@/features/notes/components/NotesFilters";
@@ -16,19 +16,39 @@ import { StatSkeleton } from "@/shared/components/Skeleton";
 import { CUE } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
+import { useQueryParams } from "@/shared/hooks/useQueryParams";
 
-interface NotesPageFilters extends NotesFiltersValue {
-  page: number;
-}
+// Fuera del componente: es dependencia de `useQueryParams` y un objeto nuevo
+// en cada render lo recalcularia sin parar.
+const NOTES_DEFAULTS = {
+  limit: "20",
+  page: "1",
+  search: "",
+  status: "ALL",
+  type: "ALL",
+};
 
 export default function NotesPage() {
-  const [filters, setFilters] = useState<NotesPageFilters>({
-    limit: 20,
-    page: 1,
-    search: "",
-    status: "ALL",
-    type: "ALL",
-  });
+  return (
+    // Obligatorio: sin este limite el build de produccion falla al
+    // prerenderizar una pagina estatica que lee la URL.
+    <Suspense fallback={<StatSkeleton />}>
+      <NotesView />
+    </Suspense>
+  );
+}
+
+function NotesView() {
+  const [params, setParams] = useQueryParams(NOTES_DEFAULTS);
+
+  const filters = {
+    limit: Number(params.limit) || 20,
+    page: Number(params.page) || 1,
+    search: params.search,
+    status: params.status as NotesFiltersValue["status"],
+    type: params.type as NotesFilterType,
+  };
+
   const [deleteTarget, setDeleteTarget] = useState<AdminNote | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
@@ -43,16 +63,17 @@ export default function NotesPage() {
   });
 
   function updateFilters(nextValue: NotesFiltersValue) {
-    setFilters((current) => ({
-      ...current,
-      ...nextValue,
-      page: 1,
-      type: nextValue.type as NotesFilterType,
-    }));
+    setParams({
+      limit: String(nextValue.limit),
+      page: "1",
+      search: nextValue.search,
+      status: nextValue.status,
+      type: nextValue.type,
+    });
   }
 
   function goToPage(page: number) {
-    setFilters((current) => ({ ...current, page }));
+    setParams({ page: String(page) });
   }
 
   /** Toda accion mueve el contador de pendientes: las metricas se releen. */

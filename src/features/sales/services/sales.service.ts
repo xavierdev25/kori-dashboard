@@ -41,16 +41,18 @@ function buildQuery(query: SalesQuery) {
  * ningun endpoint de escritura sobre ventas.
  */
 export const salesService = {
-  getSale(id: string) {
-    return apiRequest<SaleDetail>(`/admin/orders/${id}`);
+  getSale(id: string, signal?: AbortSignal) {
+    return apiRequest<SaleDetail>(`/admin/orders/${id}`, { signal });
   },
 
-  getSales(query: SalesQuery = {}) {
-    return apiRequest<PaginatedSales>(`/admin/orders${buildQuery(query)}`);
+  getSales(query: SalesQuery = {}, signal?: AbortSignal) {
+    return apiRequest<PaginatedSales>(`/admin/orders${buildQuery(query)}`, {
+      signal,
+    });
   },
 
-  getStats(query: SalesQuery = {}) {
-    return apiRequest<SalesStats>(`/admin/stats${buildQuery(query)}`);
+  getStats(query: SalesQuery = {}, signal?: AbortSignal) {
+    return apiRequest<SalesStats>(`/admin/stats${buildQuery(query)}`, { signal });
   },
 
   /**
@@ -58,9 +60,10 @@ export const salesService = {
    * llegan veinte pedidos por pagina, asi que sumar en el navegador dibujaria
    * la curva de la pagina que toque mirar y no la de la tienda.
    */
-  getTimeseries(query: SalesQuery = {}) {
+  getTimeseries(query: SalesQuery = {}, signal?: AbortSignal) {
     return apiRequest<SalesTimeseries>(
       `/admin/stats/timeseries${buildQuery(query)}`,
+      { signal },
     );
   },
 };

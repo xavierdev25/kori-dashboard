@@ -5,6 +5,7 @@ import {
 } from "@/features/products/utils/readiness";
 
 const variant = (overrides: Record<string, unknown> = {}) => ({
+  digitalAssetPath: null as string | null,
   isActive: true,
   label: "M / Negro",
   priceCents: 59_900,
@@ -32,6 +33,38 @@ describe("getReadiness", () => {
 
     expect(result.canPublish).toBe(false);
     expect(result.blockers).toContain("No tiene variantes activas");
+  });
+
+  it("un producto digital sin archivo no se puede publicar", () => {
+    // Este es el hueco que dejaba pasar el 409: el backend exige archivo en
+    // los digitales y esto no lo comprobaba, asi que el boton de publicar se
+    // veia activo y el error llegaba despues de pulsarlo, no antes.
+    const result = getReadiness(
+      product({
+        fulfillmentType: "DIGITAL",
+        variants: [variant({ digitalAssetPath: null })],
+      }),
+    );
+
+    expect(result.canPublish).toBe(false);
+    expect(result.blockers).toContain("Todavia no tiene el archivo subido");
+  });
+
+  it("con el archivo subido, el digital si se publica", () => {
+    const result = getReadiness(
+      product({
+        fulfillmentType: "DIGITAL",
+        variants: [variant({ digitalAssetPath: "kits/abc.zip" })],
+      }),
+    );
+
+    expect(result.canPublish).toBe(true);
+  });
+
+  it("a un POD no se le exige archivo digital", () => {
+    // El producto de la tienda fisica no tiene ni debe tener uno: pedirselo
+    // bloquearia la publicacion de todas las prendas.
+    expect(getReadiness(product()).canPublish).toBe(true);
   });
 
   it("sin imagenes no", () => {

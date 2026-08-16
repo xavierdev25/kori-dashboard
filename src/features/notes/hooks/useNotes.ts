@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { notesService } from "@/features/notes/services/notes.service";
-import { getErrorText } from "@/shared/lib/error-message";
+import { useAsyncData } from "@/shared/hooks/useAsyncData";
 import type {
   AdminNote,
   NotesQuery,
@@ -10,122 +10,73 @@ import type {
   PaginatedNotesResponse,
 } from "@/features/notes/types/note.types";
 
+const NO_NOTES: PaginatedNotesResponse = {
+  data: [],
+  meta: { limit: 20, page: 1, total: 0, totalPages: 0 },
+};
+
 export function useNotes(query: NotesQuery) {
   const { limit, page, search, status, type } = query;
-  const [notes, setNotes] = useState<AdminNote[]>([]);
-  const [meta, setMeta] = useState<PaginatedNotesResponse["meta"] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadNotes = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+  // El buscador es el caso claro de por que hay que cancelar: cada tecla
+  // dispara una peticion y la del texto corto suele volver despues que la del
+  // largo, dejando en pantalla los resultados de lo que ya no esta escrito.
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      notesService.getNotes({ limit, page, search, status, type }, signal),
+    [limit, page, search, status, type],
+  );
 
-    try {
-      const response = await notesService.getNotes({
-        limit,
-        page,
-        search,
-        status,
-        type,
-      });
-      setNotes(response.data);
-      setMeta(response.meta);
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudieron cargar las notas."));
-    } finally {
-      setLoading(false);
-    }
-  }, [limit, page, search, status, type]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadNotes();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadNotes]);
+  const { data, error, loading, refresh } = useAsyncData(load, {
+    fallbackMessage: "No se pudieron cargar las notas.",
+    initialData: NO_NOTES,
+  });
 
   return {
     error,
     loading,
-    meta,
-    notes,
-    refresh: loadNotes,
+    meta: data.meta,
+    notes: data.data,
+    refresh,
   };
 }
 
 export function useNote(id: string | null) {
-  const [note, setNote] = useState<AdminNote | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(Boolean(id));
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      id ? notesService.getNote(id, signal) : Promise.resolve(null),
+    [id],
+  );
 
-  const loadNote = useCallback(async () => {
-    if (!id) {
-      return;
-    }
-
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
-
-    try {
-      setNote(await notesService.getNote(id));
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudo cargar la nota."));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadNote();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadNote]);
+  const { data, error, loading, refresh } = useAsyncData<AdminNote | null>(load, {
+    enabled: Boolean(id),
+    fallbackMessage: "No se pudo cargar la nota.",
+    initialData: null,
+  });
 
   return {
     error,
     loading,
-    note,
-    refresh: loadNote,
+    note: data,
+    refresh,
   };
 }
 
 export function useNotesStats() {
-  const [stats, setStats] = useState<NotesStats | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const load = useCallback(
+    (signal: AbortSignal) => notesService.getStats(signal),
+    [],
+  );
 
-  const loadStats = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
-
-    try {
-      setStats(await notesService.getStats());
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudieron cargar las metricas."));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadStats();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadStats]);
+  const { data, error, loading, refresh } = useAsyncData<NotesStats | null>(load, {
+    fallbackMessage: "No se pudieron cargar las metricas.",
+    initialData: null,
+  });
 
   return {
     error,
     loading,
-    refresh: loadStats,
-    stats,
+    refresh,
+    stats: data,
   };
 }

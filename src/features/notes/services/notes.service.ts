@@ -54,15 +54,18 @@ export const notesService = {
     });
   },
 
-  getNote(id: string) {
-    return apiRequest<AdminNote>(`/admin/notes/${id}`);
+  getNote(id: string, signal?: AbortSignal) {
+    return apiRequest<AdminNote>(`/admin/notes/${id}`, { signal });
   },
 
-  getNotes(query: NotesQuery = {}) {
-    return apiRequest<PaginatedNotesResponse>(`/admin/notes${buildNotesQuery(query)}`);
+  getNotes(query: NotesQuery = {}, signal?: AbortSignal) {
+    return apiRequest<PaginatedNotesResponse>(
+      `/admin/notes${buildNotesQuery(query)}`,
+      { signal },
+    );
   },
 
-  getStats() {
-    return apiRequest<NotesStats>("/admin/notes/stats");
+  getStats(signal?: AbortSignal) {
+    return apiRequest<NotesStats>("/admin/notes/stats", { signal });
   },
 };

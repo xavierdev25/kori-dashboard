@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
 import { SalesTable } from "@/features/sales/components/SalesTable";
-import { SalesChart } from "@/features/sales/components/SalesChart";
+import { SalesChart } from "@/features/sales/components/SalesChartLazy";
 import { StatsPanel } from "@/features/sales/components/StatsPanel";
 import {
   useSales,
@@ -13,26 +13,49 @@ import {
   getStatusLabel,
   STATUS_ORDER,
 } from "@/features/sales/utils/order-status";
+import { RequireAdmin } from "@/features/auth/components/RequireAdmin";
 import { buttonVariants } from "@/shared/components/Button";
 import { Bones } from "@/shared/components/Bones";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
 import { StatSkeleton, TableSkeleton } from "@/shared/components/Skeleton";
+import { useQueryParams } from "@/shared/hooks/useQueryParams";
 import type { OrderStatus } from "@/features/sales/types/sale.types";
 
 const PAGE_SIZE = 20;
 
+// Fuera del componente: `useQueryParams` lo usa como dependencia y un objeto
+// nuevo en cada render lo recalcularia sin parar.
+const SALES_DEFAULTS = { from: "", page: "1", status: "", to: "" };
+
+/**
+ * El guardia envuelve a `SalesView` en vez de ir dentro a proposito: los hooks
+ * de carga viven ahi, y si estuvieran en este mismo componente se ejecutarian
+ * antes de comprobar el rol — un ARTIST dispararia las cuatro peticiones de
+ * ventas solo para que el backend le devolviera 403 en todas.
+ */
 export default function SalesPage() {
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<OrderStatus | "">("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  return (
+    <RequireAdmin>
+      {/* Obligatorio, no decorativo: `useQueryParams` lee la URL y sin este
+          limite el build de produccion falla al prerenderizar la pagina. */}
+      <Suspense fallback={<TableSkeleton />}>
+        <SalesView />
+      </Suspense>
+    </RequireAdmin>
+  );
+}
+
+function SalesView() {
+  const [params, setParams] = useQueryParams(SALES_DEFAULTS);
+  const page = Number(params.page) || 1;
+  const status = params.status as OrderStatus | "";
 
   const filters = {
-    from: from || undefined,
+    from: params.from || undefined,
     status: status || undefined,
-    to: to || undefined,
+    to: params.to || undefined,
   };
 
   const { error, loading, meta, sales } = useSales({
@@ -43,11 +66,10 @@ export default function SalesPage() {
   const { stats } = useSalesStats(filters);
   const { timeseries } = useSalesTimeseries(filters);
 
-  function updateFilter(apply: () => void) {
-    apply();
+  function updateFilter(patch: Partial<typeof SALES_DEFAULTS>) {
     // Cambiar un filtro sin volver a la primera pagina deja al usuario mirando
     // una pagina 3 que quiza ya no existe.
-    setPage(1);
+    setParams({ ...patch, page: "1" });
   }
 
   return (
@@ -92,9 +114,7 @@ export default function SalesPage() {
           <span>Estado</span>
           <select
             className="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-950 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
-            onChange={(event) =>
-              updateFilter(() => setStatus(event.target.value as OrderStatus | ""))
-            }
+            onChange={(event) => updateFilter({ status: event.target.value })}
             value={status}
           >
             <option value="">Todos</option>
@@ -109,16 +129,16 @@ export default function SalesPage() {
         <Input
           label="Desde"
           name="from"
-          onChange={(event) => updateFilter(() => setFrom(event.target.value))}
+          onChange={(event) => updateFilter({ from: event.target.value })}
           type="date"
-          value={from}
+          value={params.from}
         />
         <Input
           label="Hasta"
           name="to"
-          onChange={(event) => updateFilter(() => setTo(event.target.value))}
+          onChange={(event) => updateFilter({ to: event.target.value })}
           type="date"
-          value={to}
+          value={params.to}
         />
       </Card>
 
@@ -136,7 +156,7 @@ export default function SalesPage() {
       ) : sales.length === 0 ? (
         <EmptyState
           description={
-            status || from || to
+            status || params.from || params.to
               ? "Ninguna venta coincide con esos filtros."
               : "Todavia no hay ventas registradas."
           }
@@ -155,7 +175,7 @@ export default function SalesPage() {
                 <button
                   className={buttonVariants({ size: "sm", variant: "secondary" })}
                   disabled={page <= 1}
-                  onClick={() => setPage((current) => current - 1)}
+                  onClick={() => setParams({ page: String(page - 1) })}
                   type="button"
                 >
                   Anterior
@@ -163,7 +183,7 @@ export default function SalesPage() {
                 <button
                   className={buttonVariants({ size: "sm", variant: "secondary" })}
                   disabled={page >= meta.totalPages}
-                  onClick={() => setPage((current) => current + 1)}
+                  onClick={() => setParams({ page: String(page + 1) })}
                   type="button"
                 >
                   Siguiente

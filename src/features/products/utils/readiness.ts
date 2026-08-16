@@ -5,7 +5,7 @@ import type {
 
 type MinimalVariant = Pick<
   ProductVariant,
-  "isActive" | "label" | "printFileUrl" | "providerProductUid"
+  "digitalAssetPath" | "isActive" | "label" | "printFileUrl" | "providerProductUid"
 >;
 
 export interface Readiness {
@@ -47,6 +47,22 @@ export function getReadiness(product: {
           .map((variant) => variant.label)
           .join(", ")}`,
       );
+    }
+  }
+
+  if (product.fulfillmentType === "DIGITAL") {
+    // El equivalente digital de no tener archivo de impresion: publicarlo
+    // seria poner a la venta algo que nadie podria descargar.
+    //
+    // Faltaba, y por eso el boton de publicar se veia activo en un producto
+    // sin archivo: se pulsaba, el backend respondia 409 y el mensaje llegaba
+    // despues de haberlo intentado en vez de antes.
+    const sinArchivo = activeVariants.filter(
+      (variant) => !variant.digitalAssetPath,
+    );
+
+    if (sinArchivo.length > 0) {
+      blockers.push("Todavia no tiene el archivo subido");
     }
   }
 

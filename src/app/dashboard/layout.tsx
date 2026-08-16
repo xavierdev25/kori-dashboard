@@ -13,7 +13,7 @@ import {
 } from "@/shared/components/icons";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { AuthProvider, useSession } from "@/features/auth/context/AuthContext";
 import { Button } from "@/shared/components/Button";
 import { PageLoader } from "@/shared/components/Spinner";
 import { CUE, cue, initSound } from "@/shared/lib/sound";
@@ -29,10 +29,22 @@ const navItems = [
   { href: "/dashboard/settings", icon: Settings, label: "Ajustes" },
 ];
 
+/**
+ * El proveedor va por encima del armazon para que la sesion se pida una sola
+ * vez y la compartan tanto el menu como las pantallas que comprueban el rol.
+ */
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return (
+    <AuthProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </AuthProvider>
+  );
+}
+
+function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAdmin, isChecking, logout, status, user } = useAuth();
+  const { isAdmin, isChecking, logout, status, user } = useSession();
 
   useEffect(() => {
     if (status === "guest") {

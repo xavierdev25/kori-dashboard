@@ -12,20 +12,21 @@ export const subscribersService = {
     );
   },
 
-  getSubscribers(page = 1, limit = 20) {
+  getSubscribers(page = 1, limit = 20, signal?: AbortSignal) {
     return apiRequest<PaginatedSubscribersResponse>(
       `/admin/subscribers?page=${page}&limit=${limit}`,
+      { signal },
     );
   },
 
   /** Trae todas las páginas (para exportar CSV). */
-  async getAllSubscribers(): Promise<Subscriber[]> {
+  async getAllSubscribers(signal?: AbortSignal): Promise<Subscriber[]> {
     const all: Subscriber[] = [];
     let page = 1;
     let totalPages = 1;
 
     do {
-      const response = await this.getSubscribers(page, 100);
+      const response = await this.getSubscribers(page, 100, signal);
       all.push(...response.data);
       totalPages = response.meta.totalPages;
       page += 1;

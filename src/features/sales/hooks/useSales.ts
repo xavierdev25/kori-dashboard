@@ -1,87 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { salesService } from "@/features/sales/services/sales.service";
-import { getErrorText } from "@/shared/lib/error-message";
+import { useAsyncData } from "@/shared/hooks/useAsyncData";
 import type {
   PaginatedSales,
   SaleDetail,
   SalesQuery,
   SalesStats,
   SalesTimeseries,
-  SaleSummary,
 } from "@/features/sales/types/sale.types";
+
+const NO_SALES: PaginatedSales = {
+  data: [],
+  meta: { limit: 20, page: 1, total: 0, totalPages: 0 },
+};
 
 export function useSales(query: SalesQuery) {
   const { from, limit, page, status, to } = query;
-  const [sales, setSales] = useState<SaleSummary[]>([]);
-  const [meta, setMeta] = useState<PaginatedSales["meta"] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadSales = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      salesService.getSales({ from, limit, page, status, to }, signal),
+    [from, limit, page, status, to],
+  );
 
-    try {
-      const response = await salesService.getSales({
-        from,
-        limit,
-        page,
-        status,
-        to,
-      });
-      setSales(response.data);
-      setMeta(response.meta);
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudieron cargar las ventas."));
-    } finally {
-      setLoading(false);
-    }
-  }, [from, limit, page, status, to]);
+  const { data, error, loading, refresh } = useAsyncData(load, {
+    fallbackMessage: "No se pudieron cargar las ventas.",
+    initialData: NO_SALES,
+  });
 
-  // Diferido un tick: React 19 prohibe setState sincrono dentro de un efecto.
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadSales();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadSales]);
-
-  return { error, loading, meta, refresh: loadSales, sales };
+  return { error, loading, meta: data.meta, refresh, sales: data.data };
 }
 
 export function useSalesStats(query: SalesQuery) {
   const { from, status, to } = query;
-  const [stats, setStats] = useState<SalesStats | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadStats = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    (signal: AbortSignal) => salesService.getStats({ from, status, to }, signal),
+    [from, status, to],
+  );
 
-    try {
-      setStats(await salesService.getStats({ from, status, to }));
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudieron cargar las metricas."));
-    } finally {
-      setLoading(false);
-    }
-  }, [from, status, to]);
+  const { data, error, loading, refresh } = useAsyncData<SalesStats | null>(load, {
+    fallbackMessage: "No se pudieron cargar las metricas.",
+    initialData: null,
+  });
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadStats();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadStats]);
-
-  return { error, loading, refresh: loadStats, stats };
+  return { error, loading, refresh, stats: data };
 }
 
 /**
@@ -94,65 +59,35 @@ export function useSalesStats(query: SalesQuery) {
  */
 export function useSalesTimeseries(query: SalesQuery) {
   const { from, to } = query;
-  const [timeseries, setTimeseries] = useState<SalesTimeseries | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    (signal: AbortSignal) => salesService.getTimeseries({ from, to }, signal),
+    [from, to],
+  );
 
-    try {
-      setTimeseries(await salesService.getTimeseries({ from, to }));
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudo cargar la grafica."));
-    } finally {
-      setLoading(false);
-    }
-  }, [from, to]);
+  const { data, error, loading, refresh } = useAsyncData<SalesTimeseries | null>(
+    load,
+    {
+      fallbackMessage: "No se pudo cargar la grafica.",
+      initialData: null,
+    },
+  );
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void load();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [load]);
-
-  return { error, loading, refresh: load, timeseries };
+  return { error, loading, refresh, timeseries: data };
 }
 
 export function useSale(id: string | null) {
-  const [sale, setSale] = useState<SaleDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(Boolean(id));
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      id ? salesService.getSale(id, signal) : Promise.resolve(null),
+    [id],
+  );
 
-  const loadSale = useCallback(async () => {
-    if (!id) {
-      return;
-    }
+  const { data, error, loading, refresh } = useAsyncData<SaleDetail | null>(load, {
+    enabled: Boolean(id),
+    fallbackMessage: "No se pudo cargar la venta.",
+    initialData: null,
+  });
 
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
-
-    try {
-      setSale(await salesService.getSale(id));
-    } catch (requestError) {
-      setError(getErrorText(requestError, "No se pudo cargar la venta."));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadSale();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [loadSale]);
-
-  return { error, loading, refresh: loadSale, sale };
+  return { error, loading, refresh, sale: data };
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Plus } from "@/shared/components/icons";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { buttonVariants } from "@/shared/components/Button";
@@ -13,16 +13,42 @@ import { Input } from "@/shared/components/Input";
 import { TableSkeleton } from "@/shared/components/Skeleton";
 import { CUE, cue } from "@/shared/lib/sound";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { useQueryParams } from "@/shared/hooks/useQueryParams";
 
 const PAGE_SIZE = 20;
 
 type Visibility = "" | "published" | "draft";
 
+// Fuera del componente: es dependencia de `useQueryParams` y un objeto nuevo
+// en cada render lo recalcularia sin parar.
+const PRODUCTS_DEFAULTS = { page: "1", search: "", visibility: "" };
+
 export default function ProductsPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [visibility, setVisibility] = useState<Visibility>("");
+  return (
+    // Obligatorio: sin este limite el build de produccion falla al
+    // prerenderizar una pagina estatica que lee la URL.
+    <Suspense fallback={<TableSkeleton />}>
+      <ProductsView />
+    </Suspense>
+  );
+}
+
+function ProductsView() {
+  const [params, setParams] = useQueryParams(PRODUCTS_DEFAULTS);
+  const page = Number(params.page) || 1;
+  const visibility = params.visibility as Visibility;
+
+  // El texto se queda en estado local y solo el valor con retardo sube a la
+  // URL: escribir tiene que responder al instante, y reescribir la direccion
+  // en cada tecla es trabajo tirado.
+  const [search, setSearch] = useState(params.search);
   const debouncedSearch = useDebouncedValue(search);
+
+  useEffect(() => {
+    if (debouncedSearch !== params.search) {
+      setParams({ page: "1", search: debouncedSearch });
+    }
+  }, [debouncedSearch, params.search, setParams]);
 
   const { error, loading, meta, products } = useProducts({
     isActive: visibility === "" ? undefined : visibility === "published",
@@ -75,7 +101,6 @@ export default function ProductsPage() {
           name="search"
           onChange={(event) => {
             setSearch(event.target.value);
-            setPage(1);
           }}
           placeholder="Buscar por nombre o slug"
           value={search}
@@ -86,8 +111,7 @@ export default function ProductsPage() {
           <select
             className="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-950 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
             onChange={(event) => {
-              setVisibility(event.target.value as Visibility);
-              setPage(1);
+              setParams({ page: "1", visibility: event.target.value });
             }}
             value={visibility}
           >
@@ -138,7 +162,7 @@ export default function ProductsPage() {
                 <button
                   className={buttonVariants({ size: "sm", variant: "secondary" })}
                   disabled={page <= 1}
-                  onClick={() => setPage((current) => current - 1)}
+                  onClick={() => setParams({ page: String(page - 1) })}
                   type="button"
                 >
                   Anterior
@@ -146,7 +170,7 @@ export default function ProductsPage() {
                 <button
                   className={buttonVariants({ size: "sm", variant: "secondary" })}
                   disabled={page >= meta.totalPages}
-                  onClick={() => setPage((current) => current + 1)}
+                  onClick={() => setParams({ page: String(page + 1) })}
                   type="button"
                 >
                   Siguiente

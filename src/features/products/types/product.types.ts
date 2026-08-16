@@ -33,7 +33,13 @@ export interface ProductVariant {
 /** Variante tal como viaja en el listado: solo lo necesario para la tabla. */
 export type VariantPreview = Pick<
   ProductVariant,
-  "id" | "isActive" | "label" | "priceCents" | "printFileUrl" | "providerProductUid"
+  | "digitalAssetPath"
+  | "id"
+  | "isActive"
+  | "label"
+  | "priceCents"
+  | "printFileUrl"
+  | "providerProductUid"
 >;
 
 export interface ProductSummary {

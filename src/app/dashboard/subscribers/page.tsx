@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Download, RefreshCcw, Trash2 } from "@/shared/components/icons";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import {
   subscribersService,
   subscribersToCsv,
@@ -17,47 +17,56 @@ import { TableSkeleton } from "@/shared/components/Skeleton";
 import { CUE, cue } from "@/shared/lib/sound";
 import { useToast } from "@/shared/components/Toast";
 import { getErrorText } from "@/shared/lib/error-message";
+import { useAsyncData } from "@/shared/hooks/useAsyncData";
+import { useQueryParams } from "@/shared/hooks/useQueryParams";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "medium",
   timeStyle: "short",
 });
 
+const NO_SUBSCRIBERS: PaginatedSubscribersResponse = {
+  data: [],
+  meta: { limit: 20, page: 1, total: 0, totalPages: 0 },
+};
+
+const SUBSCRIBERS_DEFAULTS = { page: "1" };
+
 export default function SubscribersPage() {
-  const [page, setPage] = useState(1);
-  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-  const [meta, setMeta] = useState<PaginatedSubscribersResponse["meta"] | null>(
-    null,
+  return (
+    // Obligatorio: sin este limite el build de produccion falla al
+    // prerenderizar una pagina estatica que lee la URL.
+    <Suspense fallback={<TableSkeleton />}>
+      <SubscribersView />
+    </Suspense>
   );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+}
+
+function SubscribersView() {
+  const [params, setParams] = useQueryParams(SUBSCRIBERS_DEFAULTS);
+  const page = Number(params.page) || 1;
   const [isExporting, setIsExporting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadPage = useCallback(
+    (signal: AbortSignal) => subscribersService.getSubscribers(page, 20, signal),
+    [page],
+  );
 
-    try {
-      const response = await subscribersService.getSubscribers(page);
-      setSubscribers(response.data);
-      setMeta(response.meta);
-    } catch (error) {
-      setError(getErrorText(error, "No se pudo cargar la lista de correos."));
-    } finally {
-      setLoading(false);
-    }
-  }, [page]);
+  const {
+    data,
+    error,
+    loading,
+    refresh: load,
+  } = useAsyncData(loadPage, {
+    fallbackMessage: "No se pudo cargar la lista de correos.",
+    initialData: NO_SUBSCRIBERS,
+  });
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void load();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [load]);
+  const meta = data.meta;
+  const subscribers = data.data;
 
   async function handleDelete() {
     if (!deleteTarget) {
@@ -206,14 +215,14 @@ export default function SubscribersPage() {
             <Button
               disabled={page <= 1}
               leftIcon={<ChevronLeft aria-hidden className="h-4 w-4" />}
-              onClick={() => setPage((current) => current - 1)}
+              onClick={() => setParams({ page: String(page - 1) })}
               variant="secondary"
             >
               Anterior
             </Button>
             <Button
               disabled={page >= totalPages}
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() => setParams({ page: String(page + 1) })}
               rightIcon={<ChevronRight aria-hidden className="h-4 w-4" />}
               variant="secondary"
             >
