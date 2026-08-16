@@ -1,3 +1,14 @@
+# Paquetes a los que NO se les deja ejecutar scripts de instalacion. Ambos
+# compilan binarios nativos al instalarse y ninguno lo necesita aqui: usan
+# binarios precompilados. Sin esta lista, pnpm corta la instalacion en CI con
+# ERR_PNPM_IGNORED_BUILDS en vez de limitarse a avisar.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
 # Versiones forzadas para dependencias que `next` trae clavadas y no podemos
 # subir de otra forma. Las tres son herramientas de compilacion —procesan CSS
 # e imagenes al construir— y no llegan al navegador, pero un aviso de
