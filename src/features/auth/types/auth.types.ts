@@ -3,6 +3,12 @@ export type UserRole = "ARTIST" | "ADMIN";
 export interface AuthUser {
   email: string;
   id: string;
+  /**
+   * Cuenta recien creada: la contrasena con la que entro es la de reparto,
+   * la que le paso quien dio de alta la cuenta. Mientras esto siga en `true`
+   * el panel no deja hacer nada mas que cambiarla.
+   */
+  mustChangePassword: boolean;
   role: UserRole;
 }
 

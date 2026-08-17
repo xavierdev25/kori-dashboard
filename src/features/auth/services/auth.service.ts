@@ -27,4 +27,11 @@ export const authService = {
   me() {
     return apiRequest<AuthUser>("/auth/me");
   },
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return apiRequest<void>("/auth/change-password", {
+      body: { currentPassword, newPassword },
+      method: "POST",
+    });
+  },
 };

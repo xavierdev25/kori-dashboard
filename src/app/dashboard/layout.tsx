@@ -15,6 +15,7 @@ import {
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { AuthProvider, useSession } from "@/features/auth/context/AuthContext";
+import { ChangePasswordGate } from "@/features/auth/components/ChangePasswordGate";
 import { Button } from "@/shared/components/Button";
 import { PageLoader } from "@/shared/components/Spinner";
 import { CUE, cue, initSound } from "@/shared/lib/sound";
@@ -38,7 +39,12 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
-      <DashboardShell>{children}</DashboardShell>
+      {/* La barrera va DENTRO del proveedor y por fuera del armazon: necesita
+          la sesion, y tiene que tapar el panel entero mientras la contrasena
+          siga siendo la de reparto. */}
+      <ChangePasswordGate>
+        <DashboardShell>{children}</DashboardShell>
+      </ChangePasswordGate>
     </AuthProvider>
   );
 }

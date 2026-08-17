@@ -50,6 +50,23 @@ export function useAuth() {
     [router],
   );
 
+  /**
+   * Vuelve a preguntar quien eres.
+   *
+   * Lo usa la barrera de contrasena al terminar: el backend ya bajo la
+   * bandera, y releer la sesion es lo que hace que la barrera desaparezca sin
+   * recargar la pagina ni sacar a nadie de donde estaba.
+   */
+  const refreshUser = useCallback(async () => {
+    try {
+      setUser(await authService.me());
+      setStatus("authenticated");
+    } catch {
+      setUser(null);
+      setStatus("guest");
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     // Aunque el backend falle, la sesion local se cierra igual: dejar al
     // usuario dentro tras pulsar "Salir" seria peor que un token sin revocar.
@@ -68,6 +85,7 @@ export function useAuth() {
     isChecking: status === "checking",
     login,
     logout,
+    refreshUser,
     status,
     user,
   };
