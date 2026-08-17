@@ -22,6 +22,7 @@ export { default as Eye } from "reicon-react/icons/Eye";
 export { default as EyeOff } from "reicon-react/icons/EyeOff";
 export { default as FileText } from "reicon-react/icons/FileText";
 export { default as Images } from "reicon-react/icons/Images";
+export { default as Inbox } from "reicon-react/icons/Inbox";
 export { default as LogIn } from "reicon-react/icons/Login";
 export { default as Package } from "reicon-react/icons/Package";
 export { default as Plus } from "reicon-react/icons/Plus";

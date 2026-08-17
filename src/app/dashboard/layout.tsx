@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   LogOut,
+  Inbox,
   Mail,
   Receipt,
   Settings,
@@ -25,6 +26,7 @@ const navItems = [
   // Las ventas son solo para ADMIN, igual que en el backend.
   { adminOnly: true, href: "/dashboard/sales", icon: Receipt, label: "Ventas" },
   { href: "/dashboard/notes", icon: StickyNote, label: "Notas" },
+  { href: "/dashboard/messages", icon: Inbox, label: "Mensajes" },
   { href: "/dashboard/subscribers", icon: Mail, label: "Correos" },
   { href: "/dashboard/settings", icon: Settings, label: "Ajustes" },
 ];
