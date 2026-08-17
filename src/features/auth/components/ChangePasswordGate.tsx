@@ -29,7 +29,7 @@ export function ChangePasswordGate({ children }: { children: React.ReactNode }) 
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  if (false) {
+  if (!user?.mustChangePassword) {
     return children;
   }
 
