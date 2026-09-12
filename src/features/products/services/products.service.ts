@@ -61,9 +61,10 @@ export const productsService = {
    * producto en sí no se toca para no dejar huecos en lo ya vendido.
    */
   deleteProduct(id: string) {
-    return apiRequest<{ deleted: boolean }>(`/admin/products/${id}`, {
-      method: "DELETE",
-    });
+    return apiRequest<{ deleted: boolean; discardedAttempts: number }>(
+      `/admin/products/${id}`,
+      { method: "DELETE" },
+    );
   },
 
   deleteVariant(productId: string, variantId: string) {

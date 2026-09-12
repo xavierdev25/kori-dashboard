@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ExternalLink } from "@/shared/components/icons";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ExternalLink,
+  RefreshCcw,
+} from "@/shared/components/icons";
+import { useState } from "react";
 import { formatDate } from "@/features/notes/utils/format-date";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { useSale } from "@/features/sales/hooks/useSales";
+import { salesService } from "@/features/sales/services/sales.service";
 import {
   getStatusLabel,
   getStatusTone,
+  needsAttention,
 } from "@/features/sales/utils/order-status";
 import { Badge } from "@/shared/components/Badge";
-import { buttonVariants } from "@/shared/components/Button";
+import { Button, buttonVariants } from "@/shared/components/Button";
+import { CUE } from "@/shared/lib/sound";
+import { getErrorText } from "@/shared/lib/error-message";
+import { useToast } from "@/shared/components/Toast";
 import { Card } from "@/shared/components/Card";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PageLoader } from "@/shared/components/Spinner";
@@ -53,7 +64,30 @@ function Address({ sale }: { sale: SaleDetail }) {
 export default function SaleDetailPage() {
   const params = useParams<{ id?: string | string[] }>();
   const id = getParamId(params.id);
-  const { error, loading, sale } = useSale(id);
+  const { error, loading, refresh, sale } = useSale(id);
+  const toast = useToast();
+  const [reintentando, setReintentando] = useState(false);
+
+  async function reintentar() {
+    setReintentando(true);
+
+    try {
+      const { requeued } = await salesService.retryOrder(id!);
+      await refresh();
+      toast.success(
+        requeued === 1
+          ? "Trabajo de vuelta en la cola. La entrega se reintenta en unos segundos."
+          : `${requeued} trabajos de vuelta en la cola.`,
+        CUE.listo,
+      );
+    } catch (retryError) {
+      // El backend explica por que no se puede: que el pedido ya no esta
+      // atascado, o que no tiene ningun trabajo agotado que reintentar.
+      toast.error(getErrorText(retryError, "No se pudo reintentar la entrega."));
+    } finally {
+      setReintentando(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -104,13 +138,31 @@ export default function SaleDetailPage() {
 
       {sale.reviewReason || sale.fulfillmentError ? (
         <Card className="border-rose-200 bg-rose-50 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-rose-800">
-            <AlertTriangle aria-hidden className="h-4 w-4" />
-            Este pedido necesita intervencion
-          </p>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-rose-700">
-            {sale.reviewReason ?? sale.fulfillmentError}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-sm font-semibold text-rose-800">
+                <AlertTriangle aria-hidden className="h-4 w-4" />
+                Este pedido necesita intervencion
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-rose-700">
+                {sale.reviewReason ?? sale.fulfillmentError}
+              </p>
+            </div>
+
+            {/* Solo cuando esta atascado de verdad. Un pedido que llego aqui
+                por un error de produccion antiguo pero ya avanzo no se
+                reintenta: el backend lo rechazaria igualmente. */}
+            {needsAttention(sale.status) ? (
+              <Button
+                isLoading={reintentando}
+                leftIcon={<RefreshCcw aria-hidden className="h-4 w-4" />}
+                onClick={() => void reintentar()}
+                variant="secondary"
+              >
+                Reintentar entrega
+              </Button>
+            ) : null}
+          </div>
         </Card>
       ) : null}
 

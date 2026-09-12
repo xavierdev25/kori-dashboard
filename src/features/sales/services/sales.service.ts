@@ -41,6 +41,18 @@ function buildQuery(query: SalesQuery) {
  * ningun endpoint de escritura sobre ventas.
  */
 export const salesService = {
+  /**
+   * Devuelve a la cola los trabajos agotados de un pedido atascado.
+   *
+   * No edita el estado: reintenta el trabajo, y el pedido vuelve a PAID como
+   * consecuencia. El backend solo lo acepta desde NEEDS_REVIEW.
+   */
+  retryOrder(id: string) {
+    return apiRequest<{ requeued: number }>(`/admin/orders/${id}/retry`, {
+      method: "POST",
+    });
+  },
+
   getSale(id: string, signal?: AbortSignal) {
     return apiRequest<SaleDetail>(`/admin/orders/${id}`, { signal });
   },

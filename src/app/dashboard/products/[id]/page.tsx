@@ -105,8 +105,13 @@ export default function ProductDetailPage() {
     setBorrando(true);
 
     try {
-      await productsService.deleteProduct(id!);
-      toast.success(`"${product!.name}" se borro.`, CUE.borrar);
+      const { discardedAttempts } = await productsService.deleteProduct(id!);
+      toast.success(
+        discardedAttempts > 0
+          ? `"${product!.name}" se borro, junto a ${discardedAttempts} checkout(s) que nadie llego a pagar.`
+          : `"${product!.name}" se borro.`,
+        CUE.borrar,
+      );
       // A la lista y no atras: "atras" puede ser esta misma ficha, que ya no
       // existe, y el panel enseñaria un error en vez del resultado.
       router.push("/dashboard/products");

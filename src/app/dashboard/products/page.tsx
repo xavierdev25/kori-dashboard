@@ -74,8 +74,15 @@ function ProductsView() {
     setBorrando(true);
 
     try {
-      await productsService.deleteProduct(aBorrar.id);
-      toast.success(`"${aBorrar.name}" se borro.`, CUE.borrar);
+      const { discardedAttempts } = await productsService.deleteProduct(
+        aBorrar.id,
+      );
+      toast.success(
+        discardedAttempts > 0
+          ? `"${aBorrar.name}" se borro, junto a ${discardedAttempts} checkout(s) que nadie llego a pagar.`
+          : `"${aBorrar.name}" se borro.`,
+        CUE.borrar,
+      );
       setABorrar(null);
 
       // Si era la ultima fila de una pagina que no es la primera, esa pagina
