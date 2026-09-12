@@ -19,10 +19,24 @@ export function DrawingNotePreview({
     >
       <div className="flex aspect-square items-center justify-center overflow-hidden rounded-sm bg-neutral-100">
         {note.imageUrl ? (
+          // Sin `crossOrigin`. Lo llevaba, para que html-to-image pudiera
+          // exportar la notita a PNG sin ensuciar el canvas, y el efecto era
+          // que el dibujo no se veia en absoluto: CloudFront sirve estos
+          // archivos SIN cabecera `access-control-allow-origin`, y con
+          // `crossOrigin="anonymous"` el navegador descarta una respuesta que
+          // no la trae. Quedaba solo el texto alternativo.
+          //
+          // Medido desde panel.insecurekori.com: con el atributo la imagen
+          // falla; sin el carga. La peticion devuelve 200 en los dos casos, y
+          // por eso desde fuera no parecia un problema de permisos.
+          //
+          // Quitarlo no empeora la descarga: html-to-image se trae la imagen
+          // por su cuenta con `fetch`, que tambien necesita esa cabecera, asi
+          // que la exportacion ya estaba rota igual. Las dos se arreglan en el
+          // mismo sitio —anadir CORS en CloudFront—, no aqui.
           <img
             alt={`Dibujo para ${note.recipientName}`}
             className="h-full w-full object-contain"
-            crossOrigin="anonymous"
             src={note.imageUrl}
           />
         ) : (
