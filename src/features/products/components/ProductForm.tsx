@@ -11,6 +11,43 @@ import type { ProductInput } from "@/features/products/types/product.types";
 /** Mismo formato que exige el backend y el CHECK de la base de datos. */
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+/**
+ * El merch esta apagado a proposito.
+ *
+ * El backend sabe producirlo desde hace tiempo —tipo POD_APPAREL, variantes con
+ * talla y color, envio del pedido al proveedor— pero nadie ha dado de alta un
+ * proveedor todavia, y un producto fisico sin eso se puede crear, publicar y
+ * cobrar sin que haya forma de mandarselo a nadie.
+ *
+ * Se apaga aqui, en la eleccion, y no mas adentro: es el unico punto donde
+ * alguien puede empezar ese camino. Cuando entre el merch, esto vuelve a
+ * `true` y no hay nada mas que tocar.
+ */
+const MERCH_DISPONIBLE = false;
+
+/**
+ * Los ejemplos siguen a lo que se esta creando.
+ *
+ * Estaban fijos en playeras, asi que al elegir "Drumkit o preset" el
+ * formulario proponia llamarlo "Playera Kori" y describirlo como algodon con
+ * estampado DTG. Un ejemplo que contradice lo que acabas de elegir se lee como
+ * un fallo de la pagina.
+ */
+const EJEMPLOS = {
+  DIGITAL: {
+    descripcion:
+      'Drumkit de 40 samples: kicks, snares, hats y 808. WAV a 24 bits, libre de regalias.',
+    nombre: 'Drumkit Diciembre',
+    slug: 'drumkit-diciembre',
+  },
+  POD: {
+    descripcion:
+      'Playera de algodon con estampado DTG. Impresa y enviada bajo pedido.',
+    nombre: 'Playera Kori',
+    slug: 'playera-kori',
+  },
+} as const;
+
 /** "Playera Kori" → "playera-kori". Quita acentos para no romper el patron. */
 export function slugify(value: string) {
   return value
@@ -106,41 +143,70 @@ export function ProductForm({
               {(
                 [
                   {
+                    disponible: true,
                     hint: "Un archivo que se descarga tras pagar",
                     label: "Drumkit o preset",
                     value: "DIGITAL" as const,
                   },
                   {
+                    disponible: MERCH_DISPONIBLE,
                     hint: "Se imprime y se envia por correo",
                     label: "Merch (playera, gorra)",
                     value: "POD" as const,
                   },
-                ]
-              ).map((option) => (
-                <label
-                  className={`cursor-pointer rounded-md border p-3 text-sm transition ${
-                    kind === option.value
-                      ? "border-neutral-950 bg-neutral-50"
-                      : "border-neutral-300 hover:bg-neutral-50"
-                  }`}
-                  key={option.value}
-                >
-                  <input
-                    checked={kind === option.value}
-                    className="sr-only"
-                    name="kind"
-                    onChange={() => setKind(option.value)}
-                    type="radio"
-                    value={option.value}
-                  />
-                  <span className="block font-medium text-neutral-950">
-                    {option.label}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-neutral-600">
-                    {option.hint}
-                  </span>
-                </label>
-              ))}
+                ] as const
+              ).map((option) => {
+                const apagada = !option.disponible;
+
+                return (
+                  <label
+                    className={`rounded-md border p-3 text-sm transition ${
+                      apagada
+                        ? "cursor-not-allowed border-dashed border-neutral-300 bg-neutral-50/60"
+                        : kind === option.value
+                          ? "cursor-pointer border-neutral-950 bg-neutral-50"
+                          : "cursor-pointer border-neutral-300 hover:bg-neutral-50"
+                    }`}
+                    key={option.value}
+                  >
+                    {/* `disabled` de verdad y no solo estilo: asi no se puede
+                        elegir ni con el teclado, y el navegador lo salta al
+                        tabular en vez de dejarte llegar a algo inerte. */}
+                    <input
+                      checked={kind === option.value}
+                      className="sr-only"
+                      disabled={apagada}
+                      name="kind"
+                      onChange={() => setKind(option.value)}
+                      type="radio"
+                      value={option.value}
+                    />
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span
+                        className={`font-medium ${
+                          apagada ? "text-neutral-500" : "text-neutral-950"
+                        }`}
+                      >
+                        {option.label}
+                      </span>
+                      {apagada ? (
+                        <span className="rounded-full border border-neutral-300 px-1.5 py-px text-[11px] font-medium text-neutral-500">
+                          Todavia no
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className={`mt-0.5 block text-xs ${
+                        apagada ? "text-neutral-500" : "text-neutral-600"
+                      }`}
+                    >
+                      {apagada
+                        ? "Falta dar de alta el proveedor que lo imprime. Por ahora solo se venden archivos."
+                        : option.hint}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </fieldset>
         ) : null}
@@ -157,7 +223,7 @@ export function ProductForm({
               setSlug(slugify(event.target.value));
             }
           }}
-          placeholder="Playera Kori"
+          placeholder={EJEMPLOS[kind].nombre}
           required
           value={name}
         />
@@ -170,7 +236,7 @@ export function ProductForm({
             setSlugTouched(true);
             setSlug(event.target.value);
           }}
-          placeholder="playera-kori"
+          placeholder={EJEMPLOS[kind].slug}
           required
           value={slug}
         />
@@ -195,7 +261,7 @@ export function ProductForm({
             className="min-h-24 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-950 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
             name="description"
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Playera de algodon con estampado DTG. Impresa y enviada bajo pedido."
+            placeholder={EJEMPLOS[kind].descripcion}
             value={description}
           />
         </label>
