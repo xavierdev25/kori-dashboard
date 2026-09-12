@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "@/shared/components/icons";
+import { useParams, useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Trash2,
+} from "@/shared/components/icons";
 import { useState } from "react";
+import { DeleteProductDialog } from "@/features/products/components/DeleteProductDialog";
 import { DigitalAssetEditor } from "@/features/products/components/DigitalAssetEditor";
 import { ImagesEditor } from "@/features/products/components/ImagesEditor";
 import { ProductForm } from "@/features/products/components/ProductForm";
@@ -29,9 +36,12 @@ export default function ProductDetailPage() {
   const params = useParams<{ id?: string | string[] }>();
   const id = getParamId(params.id);
   const { error, loading, product, refresh } = useProduct(id);
+  const router = useRouter();
   const toast = useToast();
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
+  const [borrando, setBorrando] = useState(false);
 
   if (loading) {
     return (
@@ -88,6 +98,23 @@ export default function ProductDetailPage() {
       toast.error(message);
     } finally {
       setIsPublishing(false);
+    }
+  }
+
+  async function borrarProducto() {
+    setBorrando(true);
+
+    try {
+      await productsService.deleteProduct(id!);
+      toast.success(`"${product!.name}" se borro.`, CUE.borrar);
+      // A la lista y no atras: "atras" puede ser esta misma ficha, que ya no
+      // existe, y el panel enseñaria un error en vez del resultado.
+      router.push("/dashboard/products");
+    } catch (deleteError) {
+      // El 409 de un producto con ventas nombra cuantas hay y propone
+      // despublicar. Se deja el dialogo abierto para que se lea el aviso.
+      toast.error(getErrorText(deleteError, "No se pudo borrar el producto."));
+      setBorrando(false);
     }
   }
 
@@ -204,6 +231,43 @@ export default function ProductDetailPage() {
           onSubmit={handleUpdate}
         />
       </div>
+
+      {/* Ultimo y aparte: lo que no se puede deshacer no se pone al lado de
+          un boton de guardar. */}
+      <Card className="border-red-200 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-neutral-950">
+              Borrar producto
+            </h3>
+            <p className="mt-1 text-sm text-neutral-600">
+              Se va el producto con sus variantes, sus imagenes y el archivo
+              que se vende. Si ya tiene ventas no se puede borrar: en ese caso
+              despublicalo y deja de aparecer en la tienda.
+            </p>
+          </div>
+
+          <Button
+            leftIcon={<Trash2 aria-hidden className="h-4 w-4" />}
+            onClick={() => {
+              setConfirmandoBorrado(true);
+            }}
+            variant="danger"
+          >
+            Borrar
+          </Button>
+        </div>
+      </Card>
+
+      <DeleteProductDialog
+        isDeleting={borrando}
+        onClose={() => {
+          setConfirmandoBorrado(false);
+        }}
+        onConfirm={() => void borrarProducto()}
+        open={confirmandoBorrado}
+        product={product}
+      />
     </section>
   );
 }

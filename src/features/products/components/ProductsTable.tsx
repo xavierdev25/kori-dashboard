@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ImageOff } from "@/shared/components/icons";
+import { AlertTriangle, ImageOff, Trash2 } from "@/shared/components/icons";
+import { RowMenu, RowMenuItem } from "@/shared/components/RowMenu";
 import { formatMoney } from "@/features/products/utils/format-money";
 import { getPriceRange, getReadiness } from "@/features/products/utils/readiness";
 import { Badge } from "@/shared/components/Badge";
@@ -73,7 +74,13 @@ function Status({ product }: { product: ProductSummary }) {
   );
 }
 
-export function ProductsTable({ products }: { products: ProductSummary[] }) {
+export function ProductsTable({
+  onDelete,
+  products,
+}: {
+  onDelete: (product: ProductSummary) => void;
+  products: ProductSummary[];
+}) {
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -84,6 +91,12 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
               <th className="px-4 py-3 font-semibold">Estado</th>
               <th className="px-4 py-3 font-semibold">Variantes</th>
               <th className="px-4 py-3 font-semibold">Precio</th>
+              {/* Sin titulo visible: una columna de iconos no necesita
+                  encabezado, pero un lector de pantalla si necesita saber
+                  que hay algo en esa celda. */}
+              <th className="px-4 py-3">
+                <span className="sr-only">Acciones</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
@@ -117,6 +130,19 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
                 </td>
                 <td className="px-4 py-3">
                   <Price product={product} />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <RowMenu label={`Acciones de ${product.name}`}>
+                    <RowMenuItem
+                      onSelect={() => {
+                        onDelete(product);
+                      }}
+                      tone="danger"
+                    >
+                      <Trash2 aria-hidden className="h-4 w-4" />
+                      <span>Borrar producto</span>
+                    </RowMenuItem>
+                  </RowMenu>
                 </td>
               </tr>
             ))}

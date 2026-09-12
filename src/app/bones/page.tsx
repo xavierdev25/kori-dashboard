@@ -49,7 +49,8 @@ export default function BonesPage() {
       </Skeleton>
 
       <Skeleton loading name="products-table" select="viewport">
-        <ProductsTable products={productosDeMuestra} />
+        {/* La captura es estatica: el menu de acciones nunca se abre aqui. */}
+        <ProductsTable onDelete={() => {}} products={productosDeMuestra} />
       </Skeleton>
 
       <Skeleton loading name="sales-table" select="viewport">

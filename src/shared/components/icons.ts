@@ -39,6 +39,8 @@ export { default as Upload } from "reicon-react/icons/Upload";
 // Sin nombre identico en reicon: se toma el equivalente mas cercano.
 /** El glifo estandar de "abre fuera": flecha que sale de un marco. */
 export { default as ExternalLink } from "reicon-react/icons/ArrowUpRightSquare";
+/** Los tres puntos de un menu de fila. Reicon los llama `MoreH`. */
+export { default as MoreHorizontal } from "reicon-react/icons/MoreH";
 /** Hueco de imagen que falta. Reicon no trae un "imagen tachada". */
 export { default as ImageOff } from "reicon-react/icons/ImageMinus";
 /** El spinner. Reicon no numera los pesos, solo hay `Loader`. */

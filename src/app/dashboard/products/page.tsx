@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { Plus } from "@/shared/components/icons";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { DeleteProductDialog } from "@/features/products/components/DeleteProductDialog";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { useProducts } from "@/features/products/hooks/useProducts";
+import { productsService } from "@/features/products/services/products.service";
 import { buttonVariants } from "@/shared/components/Button";
 import { Bones } from "@/shared/components/Bones";
 import { Card } from "@/shared/components/Card";
@@ -12,8 +14,11 @@ import { EmptyState } from "@/shared/components/EmptyState";
 import { Input } from "@/shared/components/Input";
 import { TableSkeleton } from "@/shared/components/Skeleton";
 import { CUE, cue } from "@/shared/lib/sound";
+import { getErrorText } from "@/shared/lib/error-message";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useQueryParams } from "@/shared/hooks/useQueryParams";
+import { useToast } from "@/shared/components/Toast";
+import type { ProductSummary } from "@/features/products/types/product.types";
 
 const PAGE_SIZE = 20;
 
@@ -50,12 +55,46 @@ function ProductsView() {
     }
   }, [debouncedSearch, params.search, setParams]);
 
-  const { error, loading, meta, products } = useProducts({
+  const { error, loading, meta, products, refresh } = useProducts({
     isActive: visibility === "" ? undefined : visibility === "published",
     limit: PAGE_SIZE,
     page,
     search: debouncedSearch,
   });
+
+  const toast = useToast();
+  const [aBorrar, setABorrar] = useState<ProductSummary | null>(null);
+  const [borrando, setBorrando] = useState(false);
+
+  async function confirmarBorrado() {
+    if (!aBorrar) {
+      return;
+    }
+
+    setBorrando(true);
+
+    try {
+      await productsService.deleteProduct(aBorrar.id);
+      toast.success(`"${aBorrar.name}" se borro.`, CUE.borrar);
+      setABorrar(null);
+
+      // Si era la ultima fila de una pagina que no es la primera, esa pagina
+      // ya no existe: recargar ahi dejaria la tabla vacia con un paginador
+      // diciendo que hay resultados. Se retrocede una.
+      if (products.length === 1 && page > 1) {
+        setParams({ page: String(page - 1) });
+        return;
+      }
+
+      await refresh();
+    } catch (deleteError) {
+      // Un producto con ventas responde 409 diciendo cuantas hay y que se
+      // despublique en su lugar. Ese texto llega tal cual: es mas util.
+      toast.error(getErrorText(deleteError, "No se pudo borrar el producto."));
+    } finally {
+      setBorrando(false);
+    }
+  }
 
   // El "scan" suena cuando la busqueda ya se aplico, no en cada tecla: va
   // atado al valor con retardo, igual que la peticion.
@@ -128,9 +167,19 @@ function ProductsView() {
         </div>
       ) : null}
 
+      <DeleteProductDialog
+        isDeleting={borrando}
+        onClose={() => {
+          setABorrar(null);
+        }}
+        onConfirm={() => void confirmarBorrado()}
+        open={aBorrar !== null}
+        product={aBorrar}
+      />
+
       {loading ? (
         <Bones
-          fallback={<TableSkeleton columns={4} rows={5} />}
+          fallback={<TableSkeleton columns={5} rows={5} />}
           name="products-table"
         />
       ) : products.length === 0 ? (
@@ -151,7 +200,7 @@ function ProductsView() {
         />
       ) : (
         <>
-          <ProductsTable products={products} />
+          <ProductsTable onDelete={setABorrar} products={products} />
 
           {meta && meta.totalPages > 1 ? (
             <div className="flex items-center justify-between text-sm text-neutral-600">

@@ -55,6 +55,17 @@ export const productsService = {
     );
   },
 
+  /**
+   * Borra el producto entero. El backend responde 409 si ya tiene ventas:
+   * el historial se apoya en copias congeladas dentro de OrderItem, pero el
+   * producto en sí no se toca para no dejar huecos en lo ya vendido.
+   */
+  deleteProduct(id: string) {
+    return apiRequest<{ deleted: boolean }>(`/admin/products/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   deleteVariant(productId: string, variantId: string) {
     return apiRequest<{ deleted: boolean }>(
       `/admin/products/${productId}/variants/${variantId}`,
