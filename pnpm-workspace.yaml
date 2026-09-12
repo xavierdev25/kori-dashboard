@@ -9,6 +9,18 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 
+minimumReleaseAgeExclude:
+  - '@next/env@16.3.5'
+  - '@next/swc-darwin-arm64@16.3.5'
+  - '@next/swc-darwin-x64@16.3.5'
+  - '@next/swc-linux-arm64-gnu@16.3.5'
+  - '@next/swc-linux-arm64-musl@16.3.5'
+  - '@next/swc-linux-x64-gnu@16.3.5'
+  - '@next/swc-linux-x64-musl@16.3.5'
+  - '@next/swc-win32-arm64-msvc@16.3.5'
+  - '@next/swc-win32-x64-msvc@16.3.5'
+  - next@16.3.5
+
 # Versiones forzadas para dependencias que `next` trae clavadas y no podemos
 # subir de otra forma. Las tres son herramientas de compilacion —procesan CSS
 # e imagenes al construir— y no llegan al navegador, pero un aviso de
@@ -16,6 +28,12 @@ ignoredBuiltDependencies:
 # auditoria entera, y entonces el dia que salga uno que si importa tampoco se
 # mira.
 overrides:
+  # `browserslist` y `baseline-browser-mapping` entran por el compilador de
+  # `styled-jsx`. Solo corren al construir, pero el aviso es real y el parche
+  # no cuesta nada.
+  browserslist: ^4.28.7
+  baseline-browser-mapping: ^2.11.0
+
   postcss: ^8.5.18
   nanoid: ^3.3.18
-  sharp: ^0.35.0
+  sharp: ^0.35.4

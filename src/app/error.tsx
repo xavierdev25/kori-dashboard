@@ -6,10 +6,10 @@ import { ErrorScreen } from "@/shared/components/ErrorScreen";
 /** Red de seguridad para lo que caiga fuera del panel: login y portada. */
 export default function AppError({
   error,
-  unstable_retry,
+  retry,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("[panel]", error);
@@ -20,7 +20,7 @@ export default function AppError({
       <ErrorScreen
         description="No se pudo cargar la pagina. Vuelve a intentarlo."
         digest={error.digest}
-        onRetry={unstable_retry}
+        onRetry={retry}
         title="Algo se rompio"
       />
     </main>

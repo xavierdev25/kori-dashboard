@@ -12,10 +12,10 @@ import { ErrorScreen } from "@/shared/components/ErrorScreen";
  */
 export default function DashboardError({
   error,
-  unstable_retry,
+  retry,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("[panel]", error);
@@ -25,11 +25,11 @@ export default function DashboardError({
     <ErrorScreen
       description="No se pudo mostrar esta seccion. Vuelve a intentarlo; si sigue igual, revisa que el servidor este respondiendo."
       digest={error.digest}
-      // `unstable_retry` y no `reset`: reset solo limpia el estado y vuelve a
+      // `retry` y no `reset`: reset solo limpia el estado y vuelve a
       // pintar con los mismos datos, asi que ante un fallo de carga —que es
       // el caso normal aqui— enseñaria exactamente el mismo error otra vez.
       // Este vuelve a pedirlos.
-      onRetry={unstable_retry}
+      onRetry={retry}
       title="Algo se rompio en esta pantalla"
     />
   );
