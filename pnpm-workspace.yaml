@@ -9,18 +9,6 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 
-minimumReleaseAgeExclude:
-  - '@next/env@16.3.5'
-  - '@next/swc-darwin-arm64@16.3.5'
-  - '@next/swc-darwin-x64@16.3.5'
-  - '@next/swc-linux-arm64-gnu@16.3.5'
-  - '@next/swc-linux-arm64-musl@16.3.5'
-  - '@next/swc-linux-x64-gnu@16.3.5'
-  - '@next/swc-linux-x64-musl@16.3.5'
-  - '@next/swc-win32-arm64-msvc@16.3.5'
-  - '@next/swc-win32-x64-msvc@16.3.5'
-  - next@16.3.5
-
 # Versiones forzadas para dependencias que `next` trae clavadas y no podemos
 # subir de otra forma. Las tres son herramientas de compilacion —procesan CSS
 # e imagenes al construir— y no llegan al navegador, pero un aviso de
@@ -36,4 +24,11 @@ overrides:
 
   postcss: ^8.5.18
   nanoid: ^3.3.18
-  sharp: ^0.35.4
+  # 0.35.5: el libvips que trae arrastraba un fallo de librsvg.
+  sharp: ^0.35.5
+  # Entra por next > postcss; denegacion de servicio con mapas de origen
+  # manipulados.
+  source-map-js: ^1.2.2
+  # Entra por next > styled-jsx; lectura de ficheros via `sourceMappingURL`
+  # al compilar. Severidad baja, pero el parche es limpio.
+  "@babel/core": ^7.29.1
