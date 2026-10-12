@@ -10,6 +10,7 @@ import {
   Receipt,
   Settings,
   Shirt,
+  Star,
   StickyNote,
 } from "@/shared/components/icons";
 import type { ReactNode } from "react";
@@ -29,6 +30,8 @@ const navItems = [
   { href: "/dashboard/notes", icon: StickyNote, label: "Notas" },
   { href: "/dashboard/messages", icon: Inbox, label: "Mensajes" },
   { href: "/dashboard/subscribers", icon: Mail, label: "Correos" },
+  // La estrella de la campaña: los nombres y correos de "la señal".
+  { href: "/dashboard/signal", icon: Star, label: "La señal" },
   { href: "/dashboard/settings", icon: Settings, label: "Ajustes" },
 ];
 
