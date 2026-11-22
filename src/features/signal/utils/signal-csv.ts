@@ -19,8 +19,9 @@ export function csvCell(value: string): string {
 }
 
 /**
- * El CSV para escribir los correos personales: una fila por persona, con el
- * nombre con el que saludarla y el idioma en el que escribirle.
+ * El CSV para escribir los correos: una fila por persona, con el nombre con
+ * el que saludarla (si lo dio), el idioma en el que escribirle y su ubicación
+ * (para avisar de actividades cerca, como el evento en Guadalajara).
  *
  * Empieza con BOM a propósito: sin él, Excel abre el UTF-8 como si fuera
  * Latin-1 y "José" sale como "JosÃ©" justo en la columna que importa.
@@ -31,16 +32,28 @@ export function signupsToCsv(signups: SignalSignup[]): string {
     "email",
     "idioma",
     "novedades",
+    "origen",
+    "pais",
+    "estado",
+    "ciudad",
+    "zona_evento",
+    "edad_confirmada",
     "aviso_aceptado",
     "fecha_registro",
   ].join(",");
 
   const rows = signups.map((signup) =>
     [
-      signup.name,
+      signup.name ?? "",
       signup.email,
       signup.locale,
       signup.marketingOptIn ? "si" : "no",
+      signup.source,
+      signup.country ?? "",
+      signup.region ?? "",
+      signup.city ?? "",
+      signup.eventZone ? "si" : "no",
+      signup.ageConfirmed ? "si" : "no",
       signup.privacyVersion,
       new Date(signup.createdAt).toISOString(),
     ]

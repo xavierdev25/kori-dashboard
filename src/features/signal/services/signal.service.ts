@@ -11,21 +11,26 @@ export const signalService = {
     });
   },
 
-  getSignups(page = 1, limit = 20, signal?: AbortSignal) {
+  /** `soloZona`: solo quienes están en la zona del evento (Guadalajara). */
+  getSignups(page = 1, limit = 20, signal?: AbortSignal, soloZona = false) {
+    const zona = soloZona ? "&zona=true" : "";
     return apiRequest<PaginatedSignalSignupsResponse>(
-      `/admin/signal?page=${page}&limit=${limit}`,
+      `/admin/signal?page=${page}&limit=${limit}${zona}`,
       { signal },
     );
   },
 
   /** Trae todas las páginas (para exportar CSV). */
-  async getAllSignups(signal?: AbortSignal): Promise<SignalSignup[]> {
+  async getAllSignups(
+    signal?: AbortSignal,
+    soloZona = false,
+  ): Promise<SignalSignup[]> {
     const all: SignalSignup[] = [];
     let page = 1;
     let totalPages = 1;
 
     do {
-      const response = await this.getSignups(page, 100, signal);
+      const response = await this.getSignups(page, 100, signal, soloZona);
       all.push(...response.data);
       totalPages = response.meta.totalPages;
       page += 1;
