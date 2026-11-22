@@ -75,6 +75,8 @@ function LettersView() {
   const page = Number(params.page) || 1;
   const [busy, setBusy] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Carta | null>(null);
+  // rechazar (o retirar una publicada) borra el texto: se confirma antes
+  const [rejectTarget, setRejectTarget] = useState<Carta | null>(null);
   const toast = useToast();
 
   const loadPage = useCallback(
@@ -105,6 +107,7 @@ function LettersView() {
           ? `La carta para ${carta.to} ya está en el archivo.`
           : `La carta para ${carta.to} no se publicará (se borró su texto).`,
       );
+      setRejectTarget(null);
       await load();
     } catch (err) {
       toast.error(getErrorText(err, "No se pudo guardar la revisión."));
@@ -155,14 +158,16 @@ function LettersView() {
         </Button>
       </div>
 
+      {/* Filtros, no pestañas ARIA: role="tab" promete flechas y paneles que
+          esto no tiene. Un grupo de botones con aria-pressed dice la verdad. */}
       <div
         aria-label="Estado de las cartas"
         className="flex flex-wrap gap-2"
-        role="tablist"
+        role="group"
       >
         {PESTANAS.map((p) => (
           <button
-            aria-selected={p.estado === estado}
+            aria-pressed={p.estado === estado}
             className={cn(
               "h-9 rounded-full border px-4 text-sm font-medium transition-colors",
               p.estado === estado
@@ -171,7 +176,6 @@ function LettersView() {
             )}
             key={p.estado}
             onClick={() => setParams({ estado: p.estado, page: "1" })}
-            role="tab"
             type="button"
           >
             {p.label}
@@ -248,7 +252,7 @@ function LettersView() {
                   <Button
                     disabled={busy === carta.id}
                     leftIcon={<Undo2 aria-hidden className="h-4 w-4" />}
-                    onClick={() => void revisar(carta, "rejected")}
+                    onClick={() => setRejectTarget(carta)}
                     size="sm"
                     variant="secondary"
                   >
@@ -296,6 +300,27 @@ function LettersView() {
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        description={
+          rejectTarget?.status === "approved"
+            ? "Sale del archivo y su texto se borra para siempre: no se puede volver a publicar. Quien la escribió verá «no se publicó»."
+            : "Su texto se borra para siempre: no se puede publicar después. Quien la escribió verá «no se publicó»."
+        }
+        detail={rejectTarget ? `Para: ${rejectTarget.to}` : undefined}
+        isBusy={Boolean(rejectTarget && busy === rejectTarget.id)}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={() => rejectTarget && void revisar(rejectTarget, "rejected")}
+        open={Boolean(rejectTarget)}
+        confirmLabel={
+          rejectTarget?.status === "approved" ? "Retirar" : "Rechazar"
+        }
+        title={
+          rejectTarget?.status === "approved"
+            ? "Retirar del archivo"
+            : "Rechazar carta"
+        }
+      />
 
       <ConfirmDialog
         description="La carta se borra de forma permanente, también del archivo si estaba publicada."
