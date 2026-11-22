@@ -6,6 +6,7 @@ import {
   BarChart3,
   LogOut,
   Inbox,
+  FileText,
   Mail,
   Receipt,
   Settings,
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/dashboard/subscribers", icon: Mail, label: "Correos" },
   // La estrella de la campaña: los nombres y correos de "la señal".
   { href: "/dashboard/signal", icon: Star, label: "La señal" },
+  { href: "/dashboard/letters", icon: FileText, label: "Cartas" },
   { href: "/dashboard/settings", icon: Settings, label: "Ajustes" },
 ];
 
